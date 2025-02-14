@@ -1,82 +1,148 @@
 package io.github.some_example_name.lwjgl3;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.utils.ScreenUtils;
+import abstractengine.abstractengine;
+import abstractengine.entitymanager;
+import abstractengine.scenemanager;
+import abstractengine.iomanager;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
-import java.util.ArrayList;
-import java.util.List;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.graphics.Texture;
 
-public class gamemaster extends ApplicationAdapter {
-    private Texture playerImage;
-    private Texture platformImage;
+public class gamemaster extends abstractengine {
     private SpriteBatch batch;
+    private entitymanager entityManager;
+    private scenemanager sceneManager;
+    private iomanager inputManager;
+    private OrthographicCamera camera;
+
+    private Texture playerTexture, platformTexture, backgroundTexture;
     private Rectangle player;
-    private List<Rectangle> platforms;
-    private Vector2 velocity;
-    private float gravity = -0.5f;
-    private boolean isJumping;
+    private Array<Rectangle> platforms;
+
+    private float velocityY = 0;
+    private final float gravity = -700;
+    private final float jumpPower = 400;
+    private final float speed = 200;
+    private boolean isJumping = false;
+    private float lastPlatformX = 100;
+    private boolean onPlatform;
+    private final float startX = 100, startY = 150;
+    private final float fallThreshold = -100;
 
     @Override
-    public void create() {
-        playerImage = new Texture(Gdx.files.internal("bucket.png"));
-        platformImage = new Texture(Gdx.files.internal("droplet.png"));
+    protected void init() {
         batch = new SpriteBatch();
+        entityManager = new entitymanager();
+        sceneManager = new scenemanager();
+        inputManager = new iomanager();
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, 800, 480);
 
-        player = new Rectangle();
-        player.x = 100;
-        player.y = 150;
-        player.width = playerImage.getWidth();
-        player.height = playerImage.getHeight();
+        playerTexture = new Texture("player.png");
+        platformTexture = new Texture("platform.png");
+        backgroundTexture = new Texture("background.png");
 
-        platforms = new ArrayList<>();
-        Rectangle ground = new Rectangle(0, 50, 800, 20);
-        platforms.add(ground);
+        platforms = new Array<>();
+        generatePlatforms();
 
-        velocity = new Vector2(0, 0);
+        // Place player on the first platform
+        Rectangle firstPlatform = platforms.first();
+        player = new Rectangle(firstPlatform.x + firstPlatform.width / 2 - 25, firstPlatform.y + firstPlatform.height, 50, 50);
+    }
+
+    private void generatePlatforms() {
+        for (int i = 0; i < 5; i++) {
+            addPlatform();
+        }
+    }
+
+    private void addPlatform() {
+        Rectangle platform = new Rectangle();
+        platform.x = lastPlatformX + MathUtils.random(200, 400); // Platforms appear ahead
+        platform.y = MathUtils.random(100, 300);
+        platform.width = 150;
+        platform.height = 20;
+        platforms.add(platform);
+        lastPlatformX = platform.x;
+    }
+
+    @Override
+    protected void update() {
+        inputManager.updateInput();
+
+        // Player movement using iomanager
+        if (inputManager.isMovingLeft()) player.x -= speed * Gdx.graphics.getDeltaTime();
+        if (inputManager.isMovingRight()) player.x += speed * Gdx.graphics.getDeltaTime();
+
+        // Jump logic
+        if (inputManager.isJumping() && !isJumping) {
+            velocityY = jumpPower;
+            isJumping = true;
+        }
+
+        velocityY += gravity * Gdx.graphics.getDeltaTime();
+        player.y += velocityY * Gdx.graphics.getDeltaTime();
+
+        // Check if player is on a platform
+        onPlatform = false;
+        for (Rectangle platform : platforms) {
+            if (player.overlaps(platform) && velocityY < 0) {
+                player.y = platform.y + platform.height;
+                velocityY = 0;
+                isJumping = false;
+                onPlatform = true;
+            }
+        }
+
+        // Respawn if player falls
+        if (player.y < fallThreshold) {
+            resetPlayer();
+        }
+
+        // Camera follows player
+        camera.position.x = player.x + player.width / 2;
+        camera.update();
+
+        // Continuously generate platforms ahead of player
+        if (player.x > lastPlatformX - 400) {
+            addPlatform();
+        }
+    }
+
+    @Override
+    protected void draw() {
+        // Clear screen to remove image residue
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+        Gdx.gl.glClearColor(0, 0, 0, 1); // Black background
+
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        batch.draw(backgroundTexture, camera.position.x - 400, 0);
+        batch.draw(playerTexture, player.x, player.y, player.width, player.height);
+        for (Rectangle platform : platforms) {
+            batch.draw(platformTexture, platform.x, platform.y, platform.width, platform.height);
+        }
+        batch.end();
+    }
+
+    private void resetPlayer() {
+        Rectangle firstPlatform = platforms.first();
+        player.x = firstPlatform.x + firstPlatform.width / 2 - 25;
+        player.y = firstPlatform.y + firstPlatform.height;
+        velocityY = 0;
         isJumping = false;
     }
 
     @Override
-    public void render() {
-        ScreenUtils.clear(0, 0, 0, 0); //Black background
-        batch.begin();
-        batch.draw(playerImage, player.x, player.y, player.width, player.height);
-        for (Rectangle platform : platforms) {
-            batch.draw(platformImage, platform.x, platform.y, platform.width, platform.height);
-        }
-        batch.end();
-
-        // Apply gravity
-        velocity.y += gravity;
-        player.y += velocity.y;
-
-        // Check collision with platforms
-        for (Rectangle platform : platforms) {
-            if (player.overlaps(platform)) {
-                player.y = platform.y + platform.height;
-                velocity.y = 0;
-                isJumping = false;
-            }
-        }
-
-        // Input handling
-        if (Gdx.input.isKeyPressed(Keys.LEFT)) player.x -= 200 * Gdx.graphics.getDeltaTime();
-        if (Gdx.input.isKeyPressed(Keys.RIGHT)) player.x += 200 * Gdx.graphics.getDeltaTime();
-        if (Gdx.input.isKeyPressed(Keys.SPACE) && !isJumping) {
-            velocity.y = 10;
-            isJumping = true;
-        }
-    }
-
-    @Override
-    public void dispose() {
+    protected void cleanup() {
         batch.dispose();
-        playerImage.dispose();
-        platformImage.dispose();
+        playerTexture.dispose();
+        platformTexture.dispose();
+        backgroundTexture.dispose();
     }
 }
