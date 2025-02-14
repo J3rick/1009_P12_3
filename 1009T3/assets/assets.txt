@@ -1,1 +1,5 @@
+background.png
+gameover.png
 libgdx.png
+platform.png
+player.png
