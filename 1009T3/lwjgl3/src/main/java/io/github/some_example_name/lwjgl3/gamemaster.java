@@ -22,7 +22,7 @@ public class gamemaster extends abstractengine {
 
     private Texture playerTexture, enemyTexture, platformTexture, backgroundTexture, gameOverTexture;
     private Rectangle player;
-    private enemy singleEnemy;
+    private Array<enemy> enemies;
     private Array<Rectangle> platforms;
 
     private float velocityY = 0;
@@ -34,11 +34,11 @@ public class gamemaster extends abstractengine {
     private boolean onPlatform;
     private final float startX = 100, startY = 150;
     private final float fallThreshold = -100;
-    
+
     private enum GameState {PLAYING, GAME_OVER, RESPAWNING}
     private GameState gameState = GameState.PLAYING;
     private float gameOverTimer = 0;
-    private final float gameOverDuration = 3; 
+    private final float gameOverDuration = 3;
 
     @Override
     protected void init() {
@@ -56,13 +56,15 @@ public class gamemaster extends abstractengine {
         gameOverTexture = new Texture("gameover.png");
 
         platforms = new Array<>();
+        enemies = new Array<>();
         generatePlatforms();
 
         // Place player on the first platform
         Rectangle firstPlatform = platforms.first();
         player = new Rectangle(firstPlatform.x + firstPlatform.width / 2 - 25, firstPlatform.y + firstPlatform.height, 50, 50);
-        
-        singleEnemy = new enemy(0, "enemy.png", MathUtils.random(100, 700), Gdx.graphics.getHeight());
+
+        // Spawn the initial enemy
+        spawnEnemy();
     }
 
     private void generatePlatforms() {
@@ -81,22 +83,44 @@ public class gamemaster extends abstractengine {
         lastPlatformX = platform.x;
     }
 
+    private void spawnEnemy() {
+        if (enemies.size < 2) {
+            float x = MathUtils.random(camera.position.x - 400, camera.position.x + 400);
+            float y = MathUtils.random(100, 480);
+            enemies.add(new enemy(enemies.size, "enemy.png", x, y));
+        }
+    }
+
     @Override
     protected void update() {
         inputManager.updateInput();
-        
-        //GameState stuff
+
+        // GameState stuff
         if (gameState == GameState.GAME_OVER) {
-        	gameOverTimer -= Gdx.graphics.getDeltaTime();
-        	if (gameOverTimer <= 0) {
-        		resetPlayer();
-        		gameState = GameState.PLAYING;
-        	}
-        	return; //Stop updates during game over
+            gameOverTimer -= Gdx.graphics.getDeltaTime();
+            if (gameOverTimer <= 0) {
+                resetPlayer();
+                gameState = GameState.PLAYING;
+            }
+            return; // Stop updates during game over
         }
-        
-        singleEnemy.update();
-        
+
+        // Update enemies
+        for (int i = enemies.size - 1; i >= 0; i--) {
+            enemy e = enemies.get(i);
+            e.update();
+
+            // If the enemy hits the player, reset its position
+            if (player.overlaps(new Rectangle(e.getX(), e.getY(), e.getWidth(), e.getHeight()))) {
+                resetEnemyPosition(e);
+            }
+
+            // If the enemy goes below the screen, reset its position
+            if (e.getY() < 0) {
+                resetEnemyPosition(e);
+            }
+        }
+
         // Player movement using iomanager
         if (inputManager.isMovingLeft()) player.x -= speed * Gdx.graphics.getDeltaTime();
         if (inputManager.isMovingRight()) player.x += speed * Gdx.graphics.getDeltaTime();
@@ -135,6 +159,17 @@ public class gamemaster extends abstractengine {
         if (player.x > lastPlatformX - 400) {
             addPlatform();
         }
+
+        // Spawn new enemies if there are less than 2
+        if (MathUtils.randomBoolean(0.01f)) {
+            spawnEnemy();
+        }
+    }
+
+    private void resetEnemyPosition(enemy e) {
+        float randomX = MathUtils.random(camera.position.x - 400, camera.position.x + 400); // Random X position
+        e.setX(randomX); // Set new X
+        e.setY(480); // Set Y to the top of the screen
     }
 
     @Override
@@ -145,25 +180,28 @@ public class gamemaster extends abstractengine {
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        
-        //Drawing game elements
+
+        // Drawing game elements
         batch.draw(backgroundTexture, camera.position.x - 400, 0);
         batch.draw(playerTexture, player.x, player.y, player.width, player.height);
-        singleEnemy.draw(batch); //Enemy element
+        for (enemy e : enemies) {
+            e.draw(batch); // Enemy element
+        }
         for (Rectangle platform : platforms) {
             batch.draw(platformTexture, platform.x, platform.y, platform.width, platform.height);
         }
-        
-        //Displaying "Game Over"
+
+        // Displaying "Game Over"
         if (gameState == GameState.GAME_OVER) {
-        	float gameOverWidth = gameOverTexture.getWidth();
-        	float gameOverHeight = gameOverTexture.getHeight();
-        	
-        	float centerX = camera.position.x - gameOverWidth / 2;
-        	float centerY = camera.position.y - gameOverHeight / 2;
-        	
-        	batch.draw(gameOverTexture, centerX,centerY);
+            float gameOverWidth = gameOverTexture.getWidth();
+            float gameOverHeight = gameOverTexture.getHeight();
+
+            float centerX = camera.position.x - gameOverWidth / 2;
+            float centerY = camera.position.y - gameOverHeight / 2;
+
+            batch.draw(gameOverTexture, centerX, centerY);
         }
+
         batch.end();
     }
 
