@@ -20,8 +20,9 @@ public class gamemaster extends abstractengine {
     private iomanager inputManager;
     private OrthographicCamera camera;
 
-    private Texture playerTexture, platformTexture, backgroundTexture, gameOverTexture;
+    private Texture playerTexture, enemyTexture, platformTexture, backgroundTexture, gameOverTexture;
     private Rectangle player;
+    private enemy singleEnemy;
     private Array<Rectangle> platforms;
 
     private float velocityY = 0;
@@ -49,6 +50,7 @@ public class gamemaster extends abstractengine {
         camera.setToOrtho(false, 800, 480);
 
         playerTexture = new Texture("player.png");
+        enemyTexture = new Texture("enemy.png");
         platformTexture = new Texture("platform.png");
         backgroundTexture = new Texture("background.png");
         gameOverTexture = new Texture("gameover.png");
@@ -59,6 +61,8 @@ public class gamemaster extends abstractengine {
         // Place player on the first platform
         Rectangle firstPlatform = platforms.first();
         player = new Rectangle(firstPlatform.x + firstPlatform.width / 2 - 25, firstPlatform.y + firstPlatform.height, 50, 50);
+        
+        singleEnemy = new enemy(0, "enemy.png", MathUtils.random(100, 700), Gdx.graphics.getHeight());
     }
 
     private void generatePlatforms() {
@@ -90,7 +94,9 @@ public class gamemaster extends abstractengine {
         	}
         	return; //Stop updates during game over
         }
-
+        
+        singleEnemy.update();
+        
         // Player movement using iomanager
         if (inputManager.isMovingLeft()) player.x -= speed * Gdx.graphics.getDeltaTime();
         if (inputManager.isMovingRight()) player.x += speed * Gdx.graphics.getDeltaTime();
@@ -143,11 +149,12 @@ public class gamemaster extends abstractengine {
         //Drawing game elements
         batch.draw(backgroundTexture, camera.position.x - 400, 0);
         batch.draw(playerTexture, player.x, player.y, player.width, player.height);
+        singleEnemy.draw(batch); //Enemy element
         for (Rectangle platform : platforms) {
             batch.draw(platformTexture, platform.x, platform.y, platform.width, platform.height);
         }
         
-        //Displaying "Game Over" picture
+        //Displaying "Game Over"
         if (gameState == GameState.GAME_OVER) {
         	float gameOverWidth = gameOverTexture.getWidth();
         	float gameOverHeight = gameOverTexture.getHeight();
@@ -171,8 +178,10 @@ public class gamemaster extends abstractengine {
     @Override
     protected void cleanup() {
         batch.dispose();
+        enemyTexture.dispose();
         playerTexture.dispose();
         platformTexture.dispose();
         backgroundTexture.dispose();
+        gameOverTexture.dispose();
     }
 }
