@@ -20,7 +20,7 @@ public class gamemaster extends abstractengine {
     private iomanager inputManager;
     private OrthographicCamera camera;
 
-    private Texture playerTexture, platformTexture, backgroundTexture;
+    private Texture playerTexture, platformTexture, backgroundTexture, gameOverTexture;
     private Rectangle player;
     private Array<Rectangle> platforms;
 
@@ -33,6 +33,11 @@ public class gamemaster extends abstractengine {
     private boolean onPlatform;
     private final float startX = 100, startY = 150;
     private final float fallThreshold = -100;
+    
+    private enum GameState {PLAYING, GAME_OVER, RESPAWNING}
+    private GameState gameState = GameState.PLAYING;
+    private float gameOverTimer = 0;
+    private final float gameOverDuration = 3; 
 
     @Override
     protected void init() {
@@ -46,6 +51,7 @@ public class gamemaster extends abstractengine {
         playerTexture = new Texture("player.png");
         platformTexture = new Texture("platform.png");
         backgroundTexture = new Texture("background.png");
+        gameOverTexture = new Texture("gameover.png");
 
         platforms = new Array<>();
         generatePlatforms();
@@ -74,6 +80,16 @@ public class gamemaster extends abstractengine {
     @Override
     protected void update() {
         inputManager.updateInput();
+        
+        //GameState stuff
+        if (gameState == GameState.GAME_OVER) {
+        	gameOverTimer -= Gdx.graphics.getDeltaTime();
+        	if (gameOverTimer <= 0) {
+        		resetPlayer();
+        		gameState = GameState.PLAYING;
+        	}
+        	return; //Stop updates during game over
+        }
 
         // Player movement using iomanager
         if (inputManager.isMovingLeft()) player.x -= speed * Gdx.graphics.getDeltaTime();
@@ -101,7 +117,8 @@ public class gamemaster extends abstractengine {
 
         // Respawn if player falls
         if (player.y < fallThreshold) {
-            resetPlayer();
+            gameState = GameState.GAME_OVER;
+            gameOverTimer = gameOverDuration;
         }
 
         // Camera follows player
@@ -122,10 +139,23 @@ public class gamemaster extends abstractengine {
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+        
+        //Drawing game elements
         batch.draw(backgroundTexture, camera.position.x - 400, 0);
         batch.draw(playerTexture, player.x, player.y, player.width, player.height);
         for (Rectangle platform : platforms) {
             batch.draw(platformTexture, platform.x, platform.y, platform.width, platform.height);
+        }
+        
+        //Displaying "Game Over" picture
+        if (gameState == GameState.GAME_OVER) {
+        	float gameOverWidth = gameOverTexture.getWidth();
+        	float gameOverHeight = gameOverTexture.getHeight();
+        	
+        	float centerX = camera.position.x - gameOverWidth / 2;
+        	float centerY = camera.position.y - gameOverHeight / 2;
+        	
+        	batch.draw(gameOverTexture, centerX,centerY);
         }
         batch.end();
     }
