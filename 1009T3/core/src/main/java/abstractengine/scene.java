@@ -1,6 +1,6 @@
 package abstractengine;
 
-import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -10,13 +10,13 @@ public abstract class scene {
     protected String name;
     protected Color bgColor;
     protected Texture bgImg;
-    protected boolean isActive;			// using the primitive class, don't see the need for 'yes,no,null' scenarios
+    protected boolean isActive;
     protected boolean isInitialized;
     protected boolean isPaused;
-    protected Camera camera;
+    protected OrthographicCamera camera;
     protected Viewport viewport;
 
-    // constructors...
+    // constructors
     public scene() {
     	return;
     	// add some more init stuff here...
@@ -26,13 +26,18 @@ public abstract class scene {
         this.name = name;
     }
     
-    public scene(String name, Color bgColor, Texture bgImg, Camera camera) {
+    public scene(String name, Color bgColor, Texture bgImg, OrthographicCamera camera, Viewport viewport) {
+    	this.name = name;
+    	this.bgColor = bgColor;
+    	this.bgImg = bgImg;
+    	this.camera = camera;
+    	this.viewport = viewport;
+    	
     	return;
     }
     
     // getters and setters, i may add more later on
-    // more added that's not in UML: isPaused, isActive, isInitialized
-    // will add Camera, Viewport later...
+    // more added that's not in UML: isPaused, isActive, isInitialized, camera, viewport
     
     public Color getBgColor() {
         return bgColor;
@@ -65,6 +70,18 @@ public abstract class scene {
     }
     public void setIsInitialized(boolean isInitialized) {
         this.isInitialized = isInitialized;
+    }
+    public OrthographicCamera getCamera() {
+    	return camera;
+    }
+    public void setOrthographicCamera(OrthographicCamera camera) {
+    	this.camera = camera;
+    }
+    public Viewport getViewport() {
+    	return viewport;
+    }
+    public void setViewport(Viewport viewport) {
+    	this.viewport = viewport;
     }
     
     public abstract void update();

@@ -1,6 +1,6 @@
 package abstractengine;
 
-import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -9,14 +9,24 @@ import java.util.HashMap;
 public class scenemanager {
     private HashMap<String, scene> scenes = new HashMap<>();
     private scene currentScene;
-    private Camera camera;
+    private OrthographicCamera camera;
     private Viewport viewport;
     private boolean isPaused;
 
+    public scenemanager() {
+    	return;
+    }
+    
+    public scenemanager(HashMap<String, scene> scenes) {
+    	this.scenes = scenes;
+    }
+    
     public void addScene(String name, scene newScene) {
         scenes.put(name, newScene);
     }
 
+    
+    // note for UML, switchScene can be removed.
     public void loadScene(String name) {
         if (scenes.containsKey(name)) {
             currentScene = scenes.get(name);
@@ -26,6 +36,16 @@ public class scenemanager {
         }
     }
 
+    
+    // note for UML, pauseScene & resumeScene combined into one function below:
+    public void togglePauseScene() {
+    	if (currentScene != null && currentScene.getIsPaused() == false) {
+    		currentScene.setIsPaused(true);
+    	} else {
+    		currentScene.setIsPaused(false);
+    	}
+   }
+    
     public void update() {
         if (currentScene != null) currentScene.update();
     }
