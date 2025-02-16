@@ -60,7 +60,7 @@ public class gamemaster extends abstractengine {
         gameOverTexture = new Texture("gameover.png");
 
         // create scenes here
-        platformerScene = new platformerscene("main","background.png",Color.BLACK);
+        platformerScene = new platformerscene("main","background.png",Color.BLACK,camera);
         
         // add scenes here
         sceneManager.addScene("main",platformerScene);
@@ -161,10 +161,11 @@ public class gamemaster extends abstractengine {
             gameOverTimer = gameOverDuration;
         }
 
-        // Camera follows player
+        
+        // in platformerScene, Camera follows player
         camera.position.x = player.x + player.width / 2;
-        camera.update();
-
+        platformerScene.setCamera(camera);
+        
         // Continuously generate platforms ahead of player
         if (player.x > lastPlatformX - 400) {
             addPlatform();

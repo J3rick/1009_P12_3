@@ -86,8 +86,9 @@ public abstract class scene {
     public OrthographicCamera getCamera() {
     	return camera;
     }
-    public void setOrthographicCamera(OrthographicCamera camera) {
+    public void setCamera(OrthographicCamera camera) {
     	this.camera = camera;
+    	camera.update();
     }
     public Viewport getViewport() {
     	return viewport;

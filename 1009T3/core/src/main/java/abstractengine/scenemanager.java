@@ -19,7 +19,6 @@ public class scenemanager {
     public void addScene(String name, scene newScene) {
         scenes.put(name, newScene);
     }
-
     
     // note for UML, switchScene can be removed.
     public void loadScene(String name) {
@@ -31,7 +30,6 @@ public class scenemanager {
         }
     }
 
-    
     // note for UML, pauseScene & resumeScene combined into one function below:
     public void togglePauseScene() {
     	if (currentScene != null && currentScene.getIsPaused() == false) {
