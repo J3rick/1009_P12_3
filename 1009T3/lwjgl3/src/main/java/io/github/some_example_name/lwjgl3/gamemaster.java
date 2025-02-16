@@ -4,9 +4,12 @@ import abstractengine.abstractengine;
 import abstractengine.entitymanager;
 import abstractengine.scenemanager;
 import abstractengine.iomanager;
+import abstractengine.scene;
+
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.math.Rectangle;
@@ -24,6 +27,7 @@ public class gamemaster extends abstractengine {
     private Rectangle player;
     private Array<enemy> enemies;
     private Array<Rectangle> platforms;
+    private platformerscene platformerScene;
 
     private float velocityY = 0;
     private final float gravity = -700;
@@ -39,7 +43,7 @@ public class gamemaster extends abstractengine {
     private GameState gameState = GameState.PLAYING;
     private float gameOverTimer = 0;
     private final float gameOverDuration = 3;
-
+    
     @Override
     protected void init() {
         batch = new SpriteBatch();
@@ -55,6 +59,12 @@ public class gamemaster extends abstractengine {
         backgroundTexture = new Texture("background.png");
         gameOverTexture = new Texture("gameover.png");
 
+        // create scenes here
+        platformerScene = new platformerscene("main","background.png",Color.BLACK);
+        
+        // add scenes here
+        sceneManager.addScene("main",platformerScene);
+        
         platforms = new Array<>();
         enemies = new Array<>();
         generatePlatforms();

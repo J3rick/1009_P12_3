@@ -9,20 +9,20 @@ import com.badlogic.gdx.Gdx;
 
 public class platformerscene extends scene {
 	
-	// can we rename this?
+	platformerscene(){
+		return;
+	}
 	
-	// shouldn't these constructors be in the scene...
-	// can check the lab to compare?
-    public platformerscene(String sceneName, String bgImgPath) {
-        super(sceneName);
-        bgImg = new Texture(Gdx.files.internal(bgImgPath)); //background.png
-    }
-
-    public platformerscene(String sceneName, String bgImgPath, Color bgColor) {
-    	super(sceneName);
-        bgImg = new Texture(Gdx.files.internal(bgImgPath)); //background.png
-        this.bgColor = bgColor;
-    }
+	platformerscene(String sceneName, String bgImgPath, Color bgColor){
+		this.sceneName = sceneName;
+		bgImg = new Texture(bgImgPath);
+		this.bgColor = bgColor;
+		// set Camera, Viewport here
+		/**
+		 camera = ;
+		 viewport = ;
+		 **/
+	}
     
     @Override
     public void update() {
@@ -42,6 +42,5 @@ public class platformerscene extends scene {
     @Override
     public void init() {
     	return;
-    	// Not sure how to handle this yet, or if necessary tbh
     }
 }

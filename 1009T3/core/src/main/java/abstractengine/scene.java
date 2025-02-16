@@ -1,13 +1,14 @@
 package abstractengine;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public abstract class scene {
-    protected String name;
+    protected String sceneName;
     protected Color bgColor;
     protected Texture bgImg;
     protected boolean isActive;
@@ -19,16 +20,26 @@ public abstract class scene {
     // constructors
     public scene() {
     	bgColor = Color.BLACK;
-    	return;
     	// add some more init stuff here...
     }
     
-    public scene(String name) {
-        this.name = name;
+    public scene(String sceneName) {
+        this.sceneName = sceneName;
     }
     
-    public scene(String name, Color bgColor, Texture bgImg, OrthographicCamera camera, Viewport viewport) {
-    	this.name = name;
+    public scene(String sceneName, String bgImgPath) {
+        this.sceneName = sceneName;
+        bgImg = new Texture(Gdx.files.internal(bgImgPath)); 
+    }
+
+    public scene(String sceneName, String bgImgPath, Color bgColor) {
+    	this.sceneName = sceneName;
+        bgImg = new Texture(Gdx.files.internal(bgImgPath));
+        this.bgColor = bgColor;
+    }
+    
+    public scene(String sceneName, Color bgColor, Texture bgImg, OrthographicCamera camera, Viewport viewport) {
+    	this.sceneName = sceneName;
     	this.bgColor = bgColor;
     	this.bgImg = bgImg;
     	this.camera = camera;
