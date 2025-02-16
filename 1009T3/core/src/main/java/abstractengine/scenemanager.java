@@ -1,11 +1,17 @@
 package abstractengine;
 
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.viewport.Viewport;
+
 import java.util.HashMap;
 
 public class scenemanager {
     private HashMap<String, scene> scenes = new HashMap<>();
     private scene currentScene;
+    private Camera camera;
+    private Viewport viewport;
+    private boolean isPaused;
 
     public void addScene(String name, scene newScene) {
         scenes.put(name, newScene);

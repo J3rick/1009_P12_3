@@ -27,4 +27,10 @@ public class platformerscene extends scene {
     public void dispose() {
         background.dispose();
     }
+    
+    @Override
+    public void init() {
+    	return;
+    	// Not sure how to handle this yet, or if necessary tbh
+    }
 }
