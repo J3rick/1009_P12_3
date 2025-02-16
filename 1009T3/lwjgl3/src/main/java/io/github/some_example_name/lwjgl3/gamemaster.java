@@ -185,10 +185,6 @@ public class gamemaster extends abstractengine {
 
     @Override
     protected void draw() {
-        // Clear screen to remove image residue
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-        Gdx.gl.glClearColor(0, 0, 0, 1); // Black background
-
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
