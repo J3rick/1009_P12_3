@@ -10,6 +10,10 @@ public class platformerscene extends scene {
 
     public platformerscene(String name) {
         super(name);
+    }
+
+    @Override
+    public void init() {
         background = new Texture(Gdx.files.internal("background.png"));
     }
 
