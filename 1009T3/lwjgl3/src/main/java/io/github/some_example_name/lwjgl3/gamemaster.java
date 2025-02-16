@@ -192,6 +192,7 @@ public class gamemaster extends abstractengine {
         }
 
         // Displaying "Game Over"
+        // Can put this as another scene...
         if (gameState == GameState.GAME_OVER) {
             float gameOverWidth = gameOverTexture.getWidth();
             float gameOverHeight = gameOverTexture.getHeight();

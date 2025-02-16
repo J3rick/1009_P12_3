@@ -1,17 +1,12 @@
 package abstractengine;
 
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.HashMap;
 
 public class scenemanager {
     private HashMap<String, scene> scenes = new HashMap<>();
     private scene currentScene;
-    private OrthographicCamera camera;
-    private Viewport viewport;
-    private boolean isPaused;
 
     public scenemanager() {
     	return;

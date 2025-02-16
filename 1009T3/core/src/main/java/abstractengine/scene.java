@@ -18,6 +18,7 @@ public abstract class scene {
 
     // constructors
     public scene() {
+    	bgColor = Color.BLACK;
     	return;
     	// add some more init stuff here...
     }
