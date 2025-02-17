@@ -2,6 +2,7 @@ package io.github.some_example_name.lwjgl3;
 
 import abstractengine.abstractengine;
 import abstractengine.entitymanager;
+import abstractengine.exceptionhandler;
 import abstractengine.scenemanager;
 import io.github.some_example_name.lwjgl3.gamemaster.GameState;
 import abstractengine.iomanager;
@@ -11,6 +12,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.graphics.Texture;
@@ -22,6 +24,7 @@ public class gamemaster extends abstractengine {
     private iomanager inputManager;
     private OrthographicCamera camera;
     private collisionmanager collisionManager;
+    private exceptionhandler exceptionHandler;
 
     private Texture playerTexture, enemyTexture, platformTexture, backgroundTexture, gameOverTexture;
     private player player;
@@ -45,40 +48,45 @@ public class gamemaster extends abstractengine {
 
     @Override
     protected void init() {
-        batch = new SpriteBatch();
-        entityManager = new entitymanager();
-        sceneManager = new scenemanager();
-        inputManager = new iomanager();
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, 800, 480);
-        collisionManager = new collisionmanager();
+        try{
+            exceptionHandler = new exceptionhandler();
+            batch = new SpriteBatch();
+            entityManager = new entitymanager();
+            sceneManager = new scenemanager();
+            inputManager = new iomanager();
+            camera = new OrthographicCamera();
+            camera.setToOrtho(false, 800, 480);
+            collisionManager = new collisionmanager();
 
-        playerTexture = new Texture("player.png");
-        enemyTexture = new Texture("enemy.png");
-        platformTexture = new Texture("platform.png");
-        backgroundTexture = new Texture("background.png");
-        gameOverTexture = new Texture("gameover.png");
+            playerTexture = new Texture("player.png");
+            enemyTexture = new Texture("enemy.png");
+            platformTexture = new Texture("platform.png");
+            backgroundTexture = new Texture("background.png");
+            gameOverTexture = new Texture("gameover.png");
 
-        platforms = new Array<>();
-        enemies = new Array<>();
-        generatePlatforms();
-        
-        player = new player(1, "player.png", startX, startY);
-        collisionManager.addEntity(player);
-        
-        platform firstPlatform = platforms.first();
-        player.setPosition(firstPlatform.getX() + firstPlatform.getWidth() / 2 - 25, firstPlatform.getY() + firstPlatform.getHeight());
-        
-        //Rectangle firstPlatform = platforms.first();
-        //setPlayer(new Rectangle(firstPlatform.x + firstPlatform.width / 2 - 25, firstPlatform.y + firstPlatform.height, 50, 50));
+            platforms = new Array<>();
+            enemies = new Array<>();
+            generatePlatforms();
+            
+            player = new player(1, "player.png", startX, startY);
+            collisionManager.addEntity(player);
+            
+            platform firstPlatform = platforms.first();
+            player.setPosition(firstPlatform.getX() + firstPlatform.getWidth() / 2 - 25, firstPlatform.getY() + firstPlatform.getHeight());
+            
+            //Rectangle firstPlatform = platforms.first();
+            //setPlayer(new Rectangle(firstPlatform.x + firstPlatform.width / 2 - 25, firstPlatform.y + firstPlatform.height, 50, 50));
 
-        spawnEnemy();
-        
-        for (int i = 0; i < enemies.size; i++) {
-        	collisionManager.addEntity(enemies.get(i));
+            spawnEnemy();
+            
+            for (int i = 0; i < enemies.size; i++) {
+                collisionManager.addEntity(enemies.get(i));
+            }
+        } catch (GdxRuntimeException ex){
+            exceptionHandler.popUp(ex);
+            cleanup();       
         }
     }
-
     private void generatePlatforms() {
         for (int i = 0; i < 5; i++) {
             addPlatform();

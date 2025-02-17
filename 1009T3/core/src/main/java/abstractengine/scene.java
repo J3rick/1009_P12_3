@@ -30,6 +30,11 @@ public abstract class scene {
     public scene(String name) {
         this();
         this.name = name;
+        this.bgColor = Color.BLACK;
+        this.bgImg = null;
+        this.isActive = false;
+        this.isInitialized = false;
+        this.isPaused = false;
     }
 
     // Constructor with all fields
