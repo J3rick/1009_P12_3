@@ -80,8 +80,10 @@ public class gamemaster extends abstractengine {
             //Rectangle firstPlatform = platforms.first();
             //setPlayer(new Rectangle(firstPlatform.x + firstPlatform.width / 2 - 25, firstPlatform.y + firstPlatform.height, 50, 50));
 
-            //Create scenes here, then add them to sceneManager
+            //Create scenes here, add necessary entities to list, then add them to sceneManager
             platformerScene = new platformerscene("Main", backgroundTexture, Color.BLUE, camera);
+            platformerScene.addEntityToList(player);
+            
             gameOverScene = new gameoverscene("Game Over", gameOverTexture, Color.BLACK, camera);
 
             sceneManager.addScene(platformerScene);

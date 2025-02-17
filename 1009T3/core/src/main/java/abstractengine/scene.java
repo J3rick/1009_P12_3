@@ -1,5 +1,7 @@
 package abstractengine;
 
+import java.util.List;
+
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -7,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public abstract class scene {
+    private List<entity> entityList;    // each scene can pass this list to the entitymanager to spawn the necessary entities
     private String name;
     private Color bgColor;
     private Texture bgImg;
@@ -38,7 +41,7 @@ public abstract class scene {
     }
 
     // Constructor with all fields
-    public scene(String name, Color bgColor, Texture bgImg, Camera camera) {
+    public scene(String name, Color bgColor, Texture bgImg, Camera camera, List<entity> entityList_in) {
         this.name = name;
         this.bgColor = bgColor;
         this.bgImg = bgImg;
@@ -46,6 +49,7 @@ public abstract class scene {
         this.isActive = false;
         this.isInitialized = false;
         this.isPaused = false;
+        this.entityList = entityList_in;
     }
 
     // Encapsulated Getters and Setters
@@ -111,6 +115,18 @@ public abstract class scene {
 
     public void setViewport(Viewport viewport) {
         this.viewport = viewport;
+    }
+
+    public List<entity> getEntityList(){
+        return entityList;
+    }
+
+    public void setEntityList(List<entity> entityList_in){
+        entityList = entityList_in;
+    }
+
+    public void addEntityToList(entity entity_in){
+        entityList.add(entity_in);
     }
 
     // Abstract Methods

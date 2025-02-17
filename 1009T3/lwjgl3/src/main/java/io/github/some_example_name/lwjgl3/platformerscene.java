@@ -1,11 +1,15 @@
 package io.github.some_example_name.lwjgl3;
 
+import abstractengine.entity;
 import abstractengine.scene;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
+import java.util.List;
+
 import com.badlogic.gdx.Gdx;
 
 public class platformerscene extends scene {
@@ -14,8 +18,8 @@ public class platformerscene extends scene {
         super("Default Scene");
     }
 
-    public platformerscene(String name, Texture bgImg, Color bgColor, OrthographicCamera camera){
-		super(name,bgColor,bgImg,camera);
+    public platformerscene(String name, Texture bgImg, Color bgColor, OrthographicCamera camera, List<entity> entityList_in){
+		super(name,bgColor,bgImg,camera,entityList_in);
     }
 
     @Override
