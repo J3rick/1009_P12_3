@@ -10,6 +10,7 @@ import abstractengine.collisionmanager;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
@@ -30,6 +31,8 @@ public class gamemaster extends abstractengine {
     private player player;
     private Array<enemy> enemies;
     private Array<platform> platforms;
+    private platformerscene platformerScene;
+    private gameoverscene gameOverScene;
 
     private float velocityY = 0;
     private final float gravity = -700;
@@ -77,13 +80,20 @@ public class gamemaster extends abstractengine {
             //Rectangle firstPlatform = platforms.first();
             //setPlayer(new Rectangle(firstPlatform.x + firstPlatform.width / 2 - 25, firstPlatform.y + firstPlatform.height, 50, 50));
 
+            //Create scenes here, then add them to sceneManager
+            platformerScene = new platformerscene("Main", backgroundTexture, Color.BLUE, camera);
+            gameOverScene = new gameoverscene("Game Over", gameOverTexture, Color.BLACK, camera);
+
+            sceneManager.addScene(platformerScene);
+            sceneManager.addScene(gameOverScene);
+
             spawnEnemy();
             
             for (int i = 0; i < enemies.size; i++) {
                 collisionManager.addEntity(enemies.get(i));
             }
         } catch (GdxRuntimeException ex){
-            exceptionHandler.popUp(ex);
+            exceptionHandler.exceptionOccured(ex);
             cleanup();       
         }
     }
