@@ -43,6 +43,7 @@ public class gamemaster extends abstractengine {
     private boolean onPlatform;
     private final float startX = 100, startY = 150;
     private final float fallThreshold = -100;
+    private final float heightThreshold = 480;
 
     public enum GameState {PLAYING, GAME_OVER, RESPAWNING}
     private GameState gameState = GameState.PLAYING;
@@ -127,8 +128,7 @@ public class gamemaster extends abstractengine {
     private void spawnEnemy() {
         if (enemies.size < 2) {
             float x = MathUtils.random(camera.position.x - 400, camera.position.x + 400);
-            float y = MathUtils.random(100, 480);
-            enemies.add(new enemy(enemies.size, "enemy.png", x, y));
+            enemies.add(new enemy(enemies.size, "enemy.png", x, heightThreshold));
         }
     }
     
@@ -167,6 +167,7 @@ public class gamemaster extends abstractengine {
             gameOverTimer -= Gdx.graphics.getDeltaTime();
             if (gameOverTimer <= 0) {
                 resetPlayer();
+                enemies.clear();
                 gameState = GameState.PLAYING;
             }
             return;
