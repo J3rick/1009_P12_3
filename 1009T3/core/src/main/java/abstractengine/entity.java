@@ -1,12 +1,14 @@
 package abstractengine;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 
 public abstract class entity {
     private final int id;
     private final String name;
     private float x, y;
     private float width, height;
+    private Rectangle bounds;
 
     public entity(int id, String name, float x, float y, float width, float height) {
         if (id < 0) throw new IllegalArgumentException("ID cannot be negative.");
@@ -44,6 +46,10 @@ public abstract class entity {
 
     public float getHeight() {
         return height;
+    }
+    
+    public Rectangle getBounds() {
+        return new Rectangle(x, y, width, height);
     }
 
     // Setters with validation

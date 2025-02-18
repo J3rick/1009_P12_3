@@ -1,5 +1,8 @@
 package abstractengine;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -7,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public abstract class scene {
+    private List<entity> entityList;    // Internal list of entities
     private String name;
     private Color bgColor;
     private Texture bgImg;
@@ -24,6 +28,7 @@ public abstract class scene {
         this.isActive = false;
         this.isInitialized = false;
         this.isPaused = false;
+        this.entityList = new ArrayList<>();
     }
 
     // Constructor with name
@@ -32,7 +37,7 @@ public abstract class scene {
         this.name = name;
     }
 
-    // Constructor with all fields
+    // Constructor with all fields except entityList
     public scene(String name, Color bgColor, Texture bgImg, Camera camera) {
         this.name = name;
         this.bgColor = bgColor;
@@ -41,6 +46,20 @@ public abstract class scene {
         this.isActive = false;
         this.isInitialized = false;
         this.isPaused = false;
+        this.entityList = new ArrayList<>();
+    }
+
+    // Constructor with all fields
+    public scene(String name, Color bgColor, Texture bgImg, Camera camera, List<entity> entityList_in) {
+        this.name = name;
+        this.bgColor = bgColor;
+        this.bgImg = bgImg;
+        this.camera = camera;
+        this.isActive = false;
+        this.isInitialized = false;
+        this.isPaused = false;
+        // Create a defensive copy of the provided list
+        this.entityList = new ArrayList<>(entityList_in);
     }
 
     // Encapsulated Getters and Setters
@@ -68,7 +87,7 @@ public abstract class scene {
         this.bgImg = bgImg;
     }
 
-    public boolean isPaused() { // Updated naming convention
+    public boolean isPaused() {
         return isPaused;
     }
 
@@ -76,7 +95,7 @@ public abstract class scene {
         this.isPaused = isPaused;
     }
 
-    public boolean isActive() { // Updated naming convention
+    public boolean isActive() {
         return isActive;
     }
 
@@ -84,7 +103,7 @@ public abstract class scene {
         this.isActive = isActive;
     }
 
-    public boolean isInitialized() { // Updated naming convention
+    public boolean isInitialized() {
         return isInitialized;
     }
 
@@ -108,9 +127,26 @@ public abstract class scene {
         this.viewport = viewport;
     }
 
+    // Return a defensive copy of the entity list to prevent external modification
+    public List<entity> getEntityList(){
+        return new ArrayList<>(entityList);
+    }
+
+    // Optionally, update the entity list using a defensive copy
+    public void setEntityList(List<entity> entityList_in){
+        this.entityList = new ArrayList<>(entityList_in);
+    }
+
+    // Add an entity to the list
+    public void addEntityToList(entity entity_in){
+        if (entity_in != null) {
+            entityList.add(entity_in);
+        }
+    }
+
     // Abstract Methods
+    public abstract void init();
     public abstract void update();
     public abstract void render(SpriteBatch batch);
-    public abstract void init();
     public abstract void dispose();
 }

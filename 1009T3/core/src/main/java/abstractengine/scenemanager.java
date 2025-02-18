@@ -23,9 +23,9 @@ public class scenemanager {
      * @param name      The name identifier for the scene.
      * @param newScene  The scene object.
      */
-    public void addScene(String name, scene newScene) {
-        if (name != null && newScene != null && !scenes.containsKey(name)) {
-            scenes.put(name, newScene);
+    public void addScene(scene newScene) {
+        if (newScene.getName() != null && newScene != null && !scenes.containsKey(newScene.getName())) {
+            scenes.put(newScene.getName(), newScene);
         }
     }
 

@@ -3,6 +3,7 @@ package io.github.some_example_name.lwjgl3;
 import abstractengine.entity;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 
@@ -29,6 +30,17 @@ public class player extends entity {
             System.err.println("Error loading player texture: " + textureFile);
             texture = new Texture(Gdx.files.internal("default.png")); // Fallback texture
         }
+    }
+    
+    public void landOnPlatform(Rectangle platform) {
+        setY(platform.y + platform.height);
+        velocityY = 0;
+        isJumping = false;
+    }
+    
+    public void setPosition(float x, float y) {
+        setX(x);
+        setY(y);
     }
 
     @Override
