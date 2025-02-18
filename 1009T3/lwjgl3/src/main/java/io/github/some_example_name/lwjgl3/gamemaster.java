@@ -1,6 +1,7 @@
 package io.github.some_example_name.lwjgl3;
 
 import abstractengine.abstractengine;
+import abstractengine.movementmanager;
 import abstractengine.entitymanager;
 import abstractengine.exceptionhandler;
 import abstractengine.scenemanager;
@@ -20,6 +21,7 @@ import com.badlogic.gdx.graphics.Texture;
 
 public class gamemaster extends abstractengine {
     private SpriteBatch batch;
+    private movementmanager movementManager;
     private entitymanager entityManager;
     private scenemanager sceneManager;
     private iomanager inputManager;
@@ -55,6 +57,7 @@ public class gamemaster extends abstractengine {
         try{
             exceptionHandler = new exceptionhandler();
             batch = new SpriteBatch();
+            movementManager = new movementmanager();
             entityManager = new entitymanager();
             sceneManager = new scenemanager();
             inputManager = new iomanager();
@@ -197,6 +200,8 @@ public class gamemaster extends abstractengine {
             if (checkCollision(player, new Rectangle(e.getX(), e.getY(), e.getWidth(), e.getHeight()))) {
                 resetEnemyPosition(e);
             }*/
+            
+            movementManager.updateEnemyMovement(e);
 
             if (e.getY() < 0) {
                 resetEnemyPosition(e);
