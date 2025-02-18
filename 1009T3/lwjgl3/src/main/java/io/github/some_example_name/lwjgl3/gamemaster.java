@@ -1,6 +1,7 @@
 package io.github.some_example_name.lwjgl3;
 
 import abstractengine.abstractengine;
+import abstractengine.movementmanager;
 import abstractengine.entitymanager;
 import abstractengine.exceptionhandler;
 import abstractengine.scenemanager;
@@ -20,6 +21,7 @@ import com.badlogic.gdx.graphics.Texture;
 
 public class gamemaster extends abstractengine {
     private SpriteBatch batch;
+    private movementmanager movementManager;
     private entitymanager entityManager;
     private scenemanager sceneManager;
     private iomanager inputManager;
@@ -43,6 +45,7 @@ public class gamemaster extends abstractengine {
     private boolean onPlatform;
     private final float startX = 100, startY = 150;
     private final float fallThreshold = -100;
+    private final float heightThreshold = 480;
 
     public enum GameState {PLAYING, GAME_OVER, RESPAWNING}
     private GameState gameState = GameState.PLAYING;
@@ -54,11 +57,12 @@ public class gamemaster extends abstractengine {
         try{
             exceptionHandler = new exceptionhandler();
             batch = new SpriteBatch();
+            movementManager = new movementmanager();
             entityManager = new entitymanager();
             sceneManager = new scenemanager();
             inputManager = new iomanager();
             camera = new OrthographicCamera();
-            camera.setToOrtho(false, 800, 480);
+            camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             collisionManager = new collisionmanager();
 
             playerTexture = new Texture("player.png");
@@ -70,33 +74,33 @@ public class gamemaster extends abstractengine {
             platforms = new Array<>();
             enemies = new Array<>();
             generatePlatforms();
-            
+
             player = new player(1, "player.png", startX, startY);
             collisionManager.addEntity(player);
-            
+
             platform firstPlatform = platforms.first();
             player.setPosition(firstPlatform.getX() + firstPlatform.getWidth() / 2 - 25, firstPlatform.getY() + firstPlatform.getHeight());
-            
+
             //Rectangle firstPlatform = platforms.first();
             //setPlayer(new Rectangle(firstPlatform.x + firstPlatform.width / 2 - 25, firstPlatform.y + firstPlatform.height, 50, 50));
 
             //Create scenes here, add necessary entities to list, then add them to sceneManager
             platformerScene = new platformerscene("Main", backgroundTexture, Color.BLUE, camera);
             platformerScene.addEntityToList(player);
-            
+
             gameOverScene = new gameoverscene("Game Over", gameOverTexture, Color.BLACK, camera);
 
             sceneManager.addScene(platformerScene);
             sceneManager.addScene(gameOverScene);
 
             spawnEnemy();
-            
+
             for (int i = 0; i < enemies.size; i++) {
                 collisionManager.addEntity(enemies.get(i));
             }
         } catch (GdxRuntimeException ex){
             exceptionHandler.exceptionOccured(ex);
-            cleanup();       
+            cleanup();
         }
     }
     private void generatePlatforms() {
@@ -115,7 +119,7 @@ public class gamemaster extends abstractengine {
         platforms.add(platform);
         lastPlatformX = platform.x;
         */
-        
+
         float x = lastPlatformX + MathUtils.random(200, 400);
 	    float y = MathUtils.random(100, 300);
 	    platform newPlatform = new platform(platforms.size, x, y, 150, 20);
@@ -124,14 +128,14 @@ public class gamemaster extends abstractengine {
 	    lastPlatformX = x;
     }
 
+
     private void spawnEnemy() {
         if (enemies.size < 2) {
             float x = MathUtils.random(camera.position.x - 400, camera.position.x + 400);
-            float y = MathUtils.random(100, 480);
-            enemies.add(new enemy(enemies.size, "enemy.png", x, y));
+            enemies.add(new enemy(enemies.size, "enemy.png", x, heightThreshold));
         }
     }
-    
+
     private void checkPlatformCollisions() {
         boolean onPlatform = false;
         for (platform platform : platforms) {
@@ -148,7 +152,7 @@ public class gamemaster extends abstractengine {
             gameOverTimer = gameOverDuration;
         }
     }
-    
+
     private void checkPlayerEnemyCollisions() {
         for (enemy e : enemies) {
             if (player.getBounds().overlaps(e.getBounds())) {
@@ -167,6 +171,7 @@ public class gamemaster extends abstractengine {
             gameOverTimer -= Gdx.graphics.getDeltaTime();
             if (gameOverTimer <= 0) {
                 resetPlayer();
+                enemies.clear();
                 gameState = GameState.PLAYING;
             }
             return;
@@ -176,7 +181,7 @@ public class gamemaster extends abstractengine {
         updatePlayer();
         updateCamera();
         updatePlatforms();
-        
+
         checkPlatformCollisions();
         checkPlayerEnemyCollisions();
         collisionManager.checkCollisions();
@@ -186,16 +191,18 @@ public class gamemaster extends abstractengine {
         }
     }
 
-    
+
     private void updateEnemies() {
         for (int i = enemies.size - 1; i >= 0; i--) {
             enemy e = enemies.get(i);
             e.update();
-            
+
             /*
             if (checkCollision(player, new Rectangle(e.getX(), e.getY(), e.getWidth(), e.getHeight()))) {
                 resetEnemyPosition(e);
             }*/
+            
+            movementManager.updateEnemyMovement(e);
 
             if (e.getY() < 0) {
                 resetEnemyPosition(e);
@@ -206,7 +213,7 @@ public class gamemaster extends abstractengine {
     private void updatePlayer() {
     	if (inputManager.isMovingLeft()) player.setX(player.getX() - speed * Gdx.graphics.getDeltaTime());
         if (inputManager.isMovingRight()) player.setX(player.getX() + speed * Gdx.graphics.getDeltaTime());
-        
+
         //if (inputManager.isMovingLeft()) setPlayerX(getPlayerX() - speed * Gdx.graphics.getDeltaTime());
         //if (inputManager.isMovingRight()) setPlayerX(getPlayerX() + speed * Gdx.graphics.getDeltaTime());
 
@@ -262,7 +269,7 @@ public class gamemaster extends abstractengine {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        batch.draw(backgroundTexture, camera.position.x - 400, 0);
+        batch.draw(backgroundTexture, camera.position.x - 400, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.draw(playerTexture, player.getX(), player.getY(), player.getWidth(), player.getHeight());
         for (enemy e : enemies) {
             e.draw(batch);
@@ -271,7 +278,7 @@ public class gamemaster extends abstractengine {
         for (Rectangle platform : platforms) {
             batch.draw(platformTexture, platform.x, platform.y, platform.width, platform.height);
         }*/
-        
+
         for (platform platform : platforms) {
             batch.draw(platformTexture, platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight());
         }

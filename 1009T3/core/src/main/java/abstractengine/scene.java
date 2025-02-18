@@ -2,7 +2,6 @@ package abstractengine;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -10,7 +9,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public abstract class scene {
-    private List<entity> entityList;    // Internal list of entities
+    private List<entity> entityList;    // Each scene can pass this list to the entity manager to spawn necessary entities
     private String name;
     private Color bgColor;
     private Texture bgImg;
@@ -128,17 +127,17 @@ public abstract class scene {
     }
 
     // Return a defensive copy of the entity list to prevent external modification
-    public List<entity> getEntityList(){
+    public List<entity> getEntityList() {
         return new ArrayList<>(entityList);
     }
 
     // Optionally, update the entity list using a defensive copy
-    public void setEntityList(List<entity> entityList_in){
+    public void setEntityList(List<entity> entityList_in) {
         this.entityList = new ArrayList<>(entityList_in);
     }
 
     // Add an entity to the list
-    public void addEntityToList(entity entity_in){
+    public void addEntityToList(entity entity_in) {
         if (entity_in != null) {
             entityList.add(entity_in);
         }
