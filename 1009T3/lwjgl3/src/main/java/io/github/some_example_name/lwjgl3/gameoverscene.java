@@ -21,6 +21,10 @@ public class gameoverscene extends scene{
 		super(name,bgColor,bgImg,camera,entityList_in);
     }
 
+    public gameoverscene(String name, Texture bgImg, Color bgColor, OrthographicCamera camera){
+		super(name,bgColor,bgImg,camera);
+    }
+
     @Override
     public void init() {
 

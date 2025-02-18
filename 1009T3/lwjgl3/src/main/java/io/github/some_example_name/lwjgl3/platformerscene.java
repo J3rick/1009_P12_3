@@ -22,6 +22,10 @@ public class platformerscene extends scene {
 		super(name,bgColor,bgImg,camera,entityList_in);
     }
 
+    public platformerscene(String name, Texture bgImg, Color bgColor, OrthographicCamera camera){
+		super(name,bgColor,bgImg,camera);
+    }
+
     @Override
     public void init() {
 

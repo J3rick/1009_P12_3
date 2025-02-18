@@ -1,5 +1,6 @@
 package abstractengine;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.Camera;
@@ -27,6 +28,7 @@ public abstract class scene {
         this.isActive = false;
         this.isInitialized = false;
         this.isPaused = false;
+        this.entityList = new ArrayList<entity>();
     }
 
     // Constructor with name
@@ -38,6 +40,19 @@ public abstract class scene {
         this.isActive = false;
         this.isInitialized = false;
         this.isPaused = false;
+        this.entityList = new ArrayList<entity>();
+    }
+
+    // Constructor with all fields except entityList
+    public scene(String name, Color bgColor, Texture bgImg, Camera camera) {
+        this.name = name;
+        this.bgColor = bgColor;
+        this.bgImg = bgImg;
+        this.camera = camera;
+        this.isActive = false;
+        this.isInitialized = false;
+        this.isPaused = false;
+        this.entityList = new ArrayList<entity>();
     }
 
     // Constructor with all fields
