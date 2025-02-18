@@ -16,7 +16,7 @@ public class enemy extends entity {
 
     @Override
     public void update() {
-        setY(getY() - FALL_SPEED * Gdx.graphics.getDeltaTime()); // Move enemy downward safely
+        //setY(getY() - FALL_SPEED * Gdx.graphics.getDeltaTime()); // Move enemy downward safely
     }
 
     @Override
