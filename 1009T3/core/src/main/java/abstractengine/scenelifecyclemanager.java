@@ -4,13 +4,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class scenelifecyclemanager {
     private scene currentScene;
-    private scenerepository sceneRepo;
+    //private scenerepository sceneRepo;
 
-    public scenelifecyclemanager(scenerepository repo) {
-        this.sceneRepo = repo;
-        this.currentScene = null;
+    public scenelifecyclemanager(scene in_currentScene) {
+        //this.sceneRepo = repo;
+        this.currentScene = in_currentScene;
     }
 
+    /* removed loading of scene as idt it's part of life cycle management scope
     public void loadScene(String name) {
         scene next = sceneRepo.getScene(name);
         if (next != null) {
@@ -24,6 +25,7 @@ public class scenelifecyclemanager {
             System.out.println("Scene not found: " + name);
         }
     }
+    */
 
     public void update() {
         if (currentScene != null) {
@@ -45,5 +47,9 @@ public class scenelifecyclemanager {
 
     public scene getCurrentScene() {
         return currentScene;
+    }
+
+    public void setCurrentScene(scene in_currentScene) {
+        this.currentScene = in_currentScene;
     }
 }

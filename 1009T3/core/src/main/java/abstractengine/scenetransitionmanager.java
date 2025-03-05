@@ -30,6 +30,7 @@ public class scenetransitionmanager {
         }
     }
 
+    /* role of lifecycle management
     public void update() {
         if (currentscene != null) {
             currentscene.update();
@@ -47,6 +48,7 @@ public class scenetransitionmanager {
             currentscene.dispose();
         }
     }
+    */
 
     public scene getCurrentScene() {
         return currentscene;
