@@ -24,7 +24,18 @@
 		<link>
 			<name>assets</name>
 			<type>2</type>
-			<location>C:/1009_P12_3-main/1009T3/assets</location>
+			<location>D:/My Documents/Code Test/Java/1009_P12_3/1009T3/assets</location>
 		</link>
 	</linkedResources>
+	<filteredResources>
+		<filter>
+			<id>1741188716495</id>
+			<name></name>
+			<type>30</type>
+			<matcher>
+				<id>org.eclipse.core.resources.regexFilterMatcher</id>
+				<arguments>node_modules|\.git|__CREATED_BY_JAVA_LANGUAGE_SERVER__</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>

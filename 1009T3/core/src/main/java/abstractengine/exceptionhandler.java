@@ -1,16 +1,13 @@
 package abstractengine;
 
 import abstractengine.interfaces.ierrorhandler;
-import abstractengine.interfaces.ilogger;
 import abstractengine.interfaces.ishutdownstrategy;
 
 public class exceptionhandler implements ierrorhandler {
     private String userErrorMsg = "The following error has occurred: ";
-    private ilogger logger;
     private ishutdownstrategy shutdownStrategy;
 
-    public exceptionhandler(ilogger logger, ishutdownstrategy shutdownStrategy) {
-        this.logger = logger;
+    public exceptionhandler(ishutdownstrategy shutdownStrategy) {
         this.shutdownStrategy = shutdownStrategy;
     }
 
@@ -37,7 +34,6 @@ public class exceptionhandler implements ierrorhandler {
 
     @Override
     public void exceptionOccurred(Exception ex) {
-        logger.logError(userErrorMsg + ex.getMessage());
         // Delegate shutdown behavior to the injected strategy.
         shutdownStrategy.shutdown(userErrorMsg + ex.getMessage());
     }
