@@ -1,56 +1,37 @@
 package io.github.some_example_name.lwjgl3;
 
 import abstractengine.entity;
+import abstractengine.interfaces.imovable;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.Gdx;
 
-public class enemy extends entity {
+public class enemy extends entity implements imovable {
     private Texture texture;
-    private final float fallSpeed = 150;
+    private static final float FALL_SPEED = 150; // Constant for controlled downward movement
 
     public enemy(int id, String textureFile, float x, float y) {
-        super(id, "enemy", x, y, 50, 50); // Set enemy size
-        texture = new Texture(Gdx.files.internal(textureFile));
+        super(id, "enemy", x, y, 50, 50); // Use parent constructor
+        this.texture = new Texture(Gdx.files.internal(textureFile));
     }
 
     @Override
     public void update() {
-        y -= fallSpeed * Gdx.graphics.getDeltaTime(); // Move the enemy downward
+        // You may choose to call updateMovement here or leave it empty if handled elsewhere.
+    }
+
+    @Override
+    public void updateMovement(float deltaTime) {
+        setY(getY() - FALL_SPEED * deltaTime);
     }
 
     @Override
     public void draw(SpriteBatch batch) {
-        batch.draw(texture, x, y, width, height);
+        batch.draw(texture, getX(), getY(), getWidth(), getHeight());
     }
 
     @Override
     public void dispose() {
         texture.dispose();
-    }
-
-    // Getter and setter methods for position
-    public float getX() {
-        return x;
-    }
-
-    public void setX(float x) {
-        this.x = x;
-    }
-
-    public float getY() {
-        return y;
-    }
-
-    public void setY(float y) {
-        this.y = y;
-    }
-
-    public float getWidth() {
-        return width;
-    }
-
-    public float getHeight() {
-        return height;
     }
 }

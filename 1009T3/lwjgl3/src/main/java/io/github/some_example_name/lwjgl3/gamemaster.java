@@ -1,19 +1,27 @@
 package io.github.some_example_name.lwjgl3;
 
 import abstractengine.abstractengine;
+import abstractengine.movementmanager;
 import abstractengine.entitymanager;
+import abstractengine.exceptionhandler;
 import abstractengine.scenemanager;
 import abstractengine.iomanager;
+import abstractengine.collisionmanager;
+import abstractengine.logging.gdxlogger;
+import abstractengine.collision.boundingboxcollisionstrategy;
+import abstractengine.movement.fallingmovementstrategy;
+import abstractengine.inmemoryscenerepository;
+
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.graphics.Texture;
-<<<<<<< Updated upstream
-=======
 import abstractengine.shutdown.simpleshutdownstrategy;
 import abstractengine.interfaces.ishutdownstrategy;
 import abstractengine.scenetransitionmanager;
@@ -22,24 +30,23 @@ import abstractengine.shutdown.simpleshutdownstrategy;
 import abstractengine.scenelifecyclemanager;
 import abstractengine.inmemoryscenerepository;
 
->>>>>>> Stashed changes
 
 public class gamemaster extends abstractengine {
     private SpriteBatch batch;
+    private movementmanager movementManager;
     private entitymanager entityManager;
     private scenemanager sceneManager;
     private iomanager inputManager;
     private OrthographicCamera camera;
-<<<<<<< Updated upstream
-=======
     private collisionmanager collisionManager;
     private exceptionhandler exceptionHandler;
->>>>>>> Stashed changes
 
     private Texture playerTexture, enemyTexture, platformTexture, backgroundTexture, gameOverTexture;
-    private Rectangle player;
+    private player player;
     private Array<enemy> enemies;
-    private Array<Rectangle> platforms;
+    private Array<platform> platforms;
+    private platformerscene platformerScene;
+    private gameoverscene gameOverScene;
 
     private float velocityY = 0;
     private final float gravity = -700;
@@ -50,22 +57,15 @@ public class gamemaster extends abstractengine {
     private boolean onPlatform;
     private final float startX = 100, startY = 150;
     private final float fallThreshold = -100;
+    private final float heightThreshold = 480;
 
-    private enum GameState {PLAYING, GAME_OVER, RESPAWNING}
-    private GameState gameState = GameState.PLAYING;
+    public enum gamestate { PLAYING, GAME_OVER, RESPAWNING }
+    private gamestate gameState = gamestate.PLAYING;
     private float gameOverTimer = 0;
     private final float gameOverDuration = 3;
 
     @Override
     protected void init() {
-<<<<<<< Updated upstream
-        batch = new SpriteBatch();
-        entityManager = new entitymanager();
-        sceneManager = new scenemanager();
-        inputManager = new iomanager();
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, 800, 480);
-=======
         try {
             // Initialize exception handler with a gdxlogger
         	// In gamemaster, for example:
@@ -78,26 +78,25 @@ public class gamemaster extends abstractengine {
             sceneManager.addScene(platformerScene);
             sceneManager.addScene(gameOverScene);
             sceneManager.loadScene("main");
->>>>>>> Stashed changes
 
-        playerTexture = new Texture("player.png");
-        enemyTexture = new Texture("enemy.png");
-        platformTexture = new Texture("platform.png");
-        backgroundTexture = new Texture("background.png");
-        gameOverTexture = new Texture("gameover.png");
+            // Then in your update and render methods, call:
+            sceneManager.update();
+            sceneManager.render(batch);          
+            inputManager = new iomanager();
+            camera = new OrthographicCamera();
+            camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            collisionManager = new collisionmanager(new boundingboxcollisionstrategy());
 
-        platforms = new Array<>();
-        enemies = new Array<>();
-        generatePlatforms();
+            playerTexture = new Texture("player.png");
+            enemyTexture = new Texture("enemy.png");
+            platformTexture = new Texture("platform.png");
+            backgroundTexture = new Texture("background.png");
+            gameOverTexture = new Texture("gameover.png");
 
-        // Place player on the first platform
-        Rectangle firstPlatform = platforms.first();
-        player = new Rectangle(firstPlatform.x + firstPlatform.width / 2 - 25, firstPlatform.y + firstPlatform.height, 50, 50);
+            platforms = new Array<>();
+            enemies = new Array<>();
+            generatePlatforms();
 
-<<<<<<< Updated upstream
-        // Spawn the initial enemy
-        spawnEnemy();
-=======
             player = new player(1, "player.png", startX, startY);
             collisionManager.addCollidable(player);
 
@@ -141,7 +140,6 @@ public class gamemaster extends abstractengine {
             exceptionHandler.exceptionOccurred(ex);
             cleanup();
         }
->>>>>>> Stashed changes
     }
 
     private void generatePlatforms() {
@@ -151,20 +149,45 @@ public class gamemaster extends abstractengine {
     }
 
     private void addPlatform() {
-        Rectangle platform = new Rectangle();
-        platform.x = lastPlatformX + MathUtils.random(200, 400); // Platforms appear ahead
-        platform.y = MathUtils.random(100, 300);
-        platform.width = 150;
-        platform.height = 20;
-        platforms.add(platform);
-        lastPlatformX = platform.x;
+        float x = lastPlatformX + MathUtils.random(200, 400);
+        float y = MathUtils.random(100, 300);
+        platform newPlatform = new platform(platforms.size, x, y, 150, 20);
+        platforms.add(newPlatform);
+        collisionManager.addCollidable(newPlatform);
+        lastPlatformX = x;
     }
 
     private void spawnEnemy() {
         if (enemies.size < 2) {
             float x = MathUtils.random(camera.position.x - 400, camera.position.x + 400);
-            float y = MathUtils.random(100, 480);
-            enemies.add(new enemy(enemies.size, "enemy.png", x, y));
+            enemies.add(new enemy(enemies.size, "enemy.png", x, heightThreshold));
+        }
+    }
+
+    private void checkPlatformCollisions() {
+        boolean onPlatform = false;
+        for (platform platform : platforms) {
+            if (player.getBounds().overlaps(platform.getBounds()) && velocityY < 0) {
+                player.landOnPlatform(platform.getBounds());
+                velocityY = 0;
+                isJumping = false;
+                onPlatform = true;
+                break;
+            }
+        }
+        if (!onPlatform && player.getY() < fallThreshold) {
+            gameState = gamestate.GAME_OVER;
+            gameOverTimer = gameOverDuration;
+        }
+    }
+
+    private void checkPlayerEnemyCollisions() {
+        for (enemy e : enemies) {
+            if (player.getBounds().overlaps(e.getBounds())) {
+                gameState = gamestate.GAME_OVER;
+                gameOverTimer = gameOverDuration;
+                break;
+            }
         }
     }
 
@@ -172,110 +195,102 @@ public class gamemaster extends abstractengine {
     protected void update() {
         inputManager.updateInput();
 
-        // GameState stuff
-        if (gameState == GameState.GAME_OVER) {
+        if (gameState == gamestate.GAME_OVER) {
             gameOverTimer -= Gdx.graphics.getDeltaTime();
             if (gameOverTimer <= 0) {
                 resetPlayer();
-                gameState = GameState.PLAYING;
+                enemies.clear();
+                gameState = gamestate.PLAYING;
             }
-            return; // Stop updates during game over
+            return;
         }
 
-        // Update enemies
+        updateEnemies();
+        updatePlayer();
+        updateCamera();
+        updatePlatforms();
+        
+        checkPlatformCollisions();
+        checkPlayerEnemyCollisions();
+        collisionManager.checkCollisions();
+
+        if (MathUtils.randomBoolean(0.01f)) {
+            spawnEnemy();
+        }
+        
+    }
+
+    private void updateEnemies() {
         for (int i = enemies.size - 1; i >= 0; i--) {
             enemy e = enemies.get(i);
             e.update();
-
-            // If the enemy hits the player, reset its position
-            if (player.overlaps(new Rectangle(e.getX(), e.getY(), e.getWidth(), e.getHeight()))) {
-                resetEnemyPosition(e);
-            }
-
-            // If the enemy goes below the screen, reset its position
+            movementManager.updateEnemyMovement(e, Gdx.graphics.getDeltaTime());
             if (e.getY() < 0) {
                 resetEnemyPosition(e);
             }
         }
+    }
 
-        // Player movement using iomanager
-        if (inputManager.isMovingLeft()) player.x -= speed * Gdx.graphics.getDeltaTime();
-        if (inputManager.isMovingRight()) player.x += speed * Gdx.graphics.getDeltaTime();
-
-        // Jump logic
+    private void updatePlayer() {
+        if (inputManager.isMovingLeft()) {
+            player.setX(player.getX() - speed * Gdx.graphics.getDeltaTime());
+        }
+        if (inputManager.isMovingRight()) {
+            player.setX(player.getX() + speed * Gdx.graphics.getDeltaTime());
+        }
         if (inputManager.isJumping() && !isJumping) {
             velocityY = jumpPower;
             isJumping = true;
         }
-
         velocityY += gravity * Gdx.graphics.getDeltaTime();
-        player.y += velocityY * Gdx.graphics.getDeltaTime();
+        player.setY(player.getY() + velocityY * Gdx.graphics.getDeltaTime());
 
-        // Check if player is on a platform
         onPlatform = false;
-        for (Rectangle platform : platforms) {
-            if (player.overlaps(platform) && velocityY < 0) {
-                player.y = platform.y + platform.height;
-                velocityY = 0;
-                isJumping = false;
-                onPlatform = true;
-            }
-        }
-
-        // Respawn if player falls
-        if (player.y < fallThreshold) {
-            gameState = GameState.GAME_OVER;
+        if (player.getY() < fallThreshold) {
+            gameState = gamestate.GAME_OVER;
             gameOverTimer = gameOverDuration;
         }
+    }
 
-        // Camera follows player
-        camera.position.x = player.x + player.width / 2;
+    private void updateCamera() {
+        camera.position.x = player.getX() + player.getWidth() / 2;
         camera.update();
+    }
 
-        // Continuously generate platforms ahead of player
-        if (player.x > lastPlatformX - 400) {
+    private void updatePlatforms() {
+        if (player.getX() > lastPlatformX - 400) {
             addPlatform();
-        }
-
-        // Spawn new enemies if there are less than 2
-        if (MathUtils.randomBoolean(0.01f)) {
-            spawnEnemy();
         }
     }
 
     private void resetEnemyPosition(enemy e) {
-        float randomX = MathUtils.random(camera.position.x - 400, camera.position.x + 400); // Random X position
-        e.setX(randomX); // Set new X
-        e.setY(480); // Set Y to the top of the screen
+        float randomX = MathUtils.random(camera.position.x - 400, camera.position.x + 400);
+        e.setX(randomX);
+        e.setY(480);
     }
 
     @Override
     protected void draw() {
-        // Clear screen to remove image residue
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-        Gdx.gl.glClearColor(0, 0, 0, 1); // Black background
+        Gdx.gl.glClearColor(0, 0, 0, 1);
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-
-        // Drawing game elements
-        batch.draw(backgroundTexture, camera.position.x - 400, 0);
-        batch.draw(playerTexture, player.x, player.y, player.width, player.height);
+      
+        batch.draw(backgroundTexture, camera.position.x - 400, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.draw(playerTexture, player.getX(), player.getY(), player.getWidth(), player.getHeight());
         for (enemy e : enemies) {
-            e.draw(batch); // Enemy element
+            e.draw(batch);
         }
-        for (Rectangle platform : platforms) {
-            batch.draw(platformTexture, platform.x, platform.y, platform.width, platform.height);
+        for (platform platform : platforms) {
+            batch.draw(platformTexture, platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight());
         }
 
-        // Displaying "Game Over"
-        if (gameState == GameState.GAME_OVER) {
+        if (gameState == gamestate.GAME_OVER) {
             float gameOverWidth = gameOverTexture.getWidth();
             float gameOverHeight = gameOverTexture.getHeight();
-
             float centerX = camera.position.x - gameOverWidth / 2;
             float centerY = camera.position.y - gameOverHeight / 2;
-
             batch.draw(gameOverTexture, centerX, centerY);
         }
 
@@ -283,9 +298,9 @@ public class gamemaster extends abstractengine {
     }
 
     private void resetPlayer() {
-        Rectangle firstPlatform = platforms.first();
-        player.x = firstPlatform.x + firstPlatform.width / 2 - 25;
-        player.y = firstPlatform.y + firstPlatform.height;
+        platform firstPlatform = platforms.first();
+        player.setX(firstPlatform.getX() + firstPlatform.getWidth() / 2 - 25);
+        player.setY(firstPlatform.getY() + firstPlatform.getHeight());
         velocityY = 0;
         isJumping = false;
     }

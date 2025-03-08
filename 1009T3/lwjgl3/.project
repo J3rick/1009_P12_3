@@ -24,11 +24,7 @@
 		<link>
 			<name>assets</name>
 			<type>2</type>
-<<<<<<< Updated upstream
 			<location>C:/SIT/Tri 1/INF 1002/1009_P12_3/1009T3/assets</location>
-=======
-			<location>C:/SIT/1009T3/assets</location>
->>>>>>> Stashed changes
 		</link>
 	</linkedResources>
 </projectDescription>

@@ -1,26 +1,33 @@
 package abstractengine;
 
+import abstractengine.interfaces.iinputhandler;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 
-public class iomanager {
-    private boolean moveLeft, moveRight, jump;
+public class iomanager implements iinputhandler {
+    private boolean moveLeft;
+    private boolean moveRight;
+    private boolean jump;
 
+    @Override
     public void updateInput() {
-        moveLeft = Gdx.input.isKeyPressed(Input.Keys.LEFT);
-        moveRight = Gdx.input.isKeyPressed(Input.Keys.RIGHT);
-        jump = Gdx.input.isKeyJustPressed(Input.Keys.SPACE);
+        this.moveLeft = Gdx.input.isKeyPressed(Input.Keys.LEFT);
+        this.moveRight = Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+        this.jump = Gdx.input.isKeyJustPressed(Input.Keys.SPACE);
     }
 
+    @Override
     public boolean isMovingLeft() {
-        return moveLeft;
+        return this.moveLeft;
     }
 
+    @Override
     public boolean isMovingRight() {
-        return moveRight;
+        return this.moveRight;
     }
 
+    @Override
     public boolean isJumping() {
-        return jump;
+        return this.jump;
     }
 }
