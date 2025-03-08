@@ -6,6 +6,10 @@ public class scenelifecyclemanager {
     private scene currentScene;
     //private scenerepository sceneRepo;
 
+    public scenelifecyclemanager() {
+        this.currentScene = null;
+    }
+
     public scenelifecyclemanager(scene in_currentScene) {
         //this.sceneRepo = repo;
         this.currentScene = in_currentScene;

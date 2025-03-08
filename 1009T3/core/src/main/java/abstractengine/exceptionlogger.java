@@ -1,11 +1,17 @@
 package abstractengine;
 
 import abstractengine.interfaces.ilogger;
+import abstractengine.logging.gdxlogger;
 
 public class exceptionlogger implements ilogger{
+
+    // gdxlogger and exceptionlogger seem to do the same thing, necessary?
+
+    private gdxlogger gdxLogger;
     private String userErrorMsg = "The following error has occurred: ";
 
-    public exceptionlogger() {
+    public exceptionlogger(gdxlogger in_gdxlogger) {
+        this.gdxLogger = in_gdxlogger;
         return;
     }
 

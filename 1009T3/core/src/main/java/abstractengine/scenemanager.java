@@ -5,11 +5,13 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class scenemanager {
     private scenerepository sceneRepo;
     private scenelifecyclemanager lifecycleManager;
+    private scenetransitionmanager transitionManager;
 
     public scenemanager(scenerepository repo) {
         this.sceneRepo = repo;
         // Create a dedicated lifecycle manager using the same repository.
-        this.lifecycleManager = new scenelifecyclemanager(repo);
+        this.transitionManager = new scenetransitionmanager(repo);
+        this.lifecycleManager = new scenelifecyclemanager();
     }
 
     // Delegate scene storage to the repository.
@@ -19,7 +21,7 @@ public class scenemanager {
 
     // Delegate lifecycle operations to the dedicated lifecycle manager.
     public void loadScene(String name) {
-        lifecycleManager.loadScene(name);
+        transitionManager.loadScene(name);
     }
 
     public void update() {

@@ -29,6 +29,7 @@ import abstractengine.error.basicerrormessagestore;
 import abstractengine.shutdown.simpleshutdownstrategy;
 import abstractengine.scenelifecyclemanager;
 import abstractengine.inmemoryscenerepository;
+import abstractengine.exceptionlogger;
 
 
 public class gamemaster extends abstractengine {
@@ -40,6 +41,7 @@ public class gamemaster extends abstractengine {
     private OrthographicCamera camera;
     private collisionmanager collisionManager;
     private exceptionhandler exceptionHandler;
+    private exceptionlogger exceptionLogger;
 
     private Texture playerTexture, enemyTexture, platformTexture, backgroundTexture, gameOverTexture;
     private player player;
@@ -69,7 +71,8 @@ public class gamemaster extends abstractengine {
         try {
             // Initialize exception handler with a gdxlogger
         	// In gamemaster, for example:
-        	exceptionHandler = new exceptionhandler(new gdxlogger(), new simpleshutdownstrategy());
+        	exceptionHandler = new exceptionhandler(new simpleshutdownstrategy());
+            exceptionLogger = new exceptionlogger(new gdxlogger());
             batch = new SpriteBatch();
             movementManager = new movementmanager(new fallingmovementstrategy(150));
             entityManager = new entitymanager();
@@ -121,8 +124,10 @@ public class gamemaster extends abstractengine {
             sceneTransitionManager.loadScene("main");
          
          // In your init() method:
-            scenelifecyclemanager lifecycleManager = new scenelifecyclemanager(new inmemoryscenerepository());
-            lifecycleManager.loadScene("main");
+            scenelifecyclemanager lifecycleManager = new scenelifecyclemanager();
+            scenetransitionmanager transitionManager = new scenetransitionmanager(new inmemoryscenerepository());
+            transitionManager.loadScene("main");
+            lifecycleManager.setCurrentScene(transitionManager.getCurrentScene());
 
             // In your update() method, call:
             lifecycleManager.update();
