@@ -12,6 +12,17 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.graphics.Texture;
+<<<<<<< Updated upstream
+=======
+import abstractengine.shutdown.simpleshutdownstrategy;
+import abstractengine.interfaces.ishutdownstrategy;
+import abstractengine.scenetransitionmanager;
+import abstractengine.error.basicerrormessagestore;
+import abstractengine.shutdown.simpleshutdownstrategy;
+import abstractengine.scenelifecyclemanager;
+import abstractengine.inmemoryscenerepository;
+
+>>>>>>> Stashed changes
 
 public class gamemaster extends abstractengine {
     private SpriteBatch batch;
@@ -19,6 +30,11 @@ public class gamemaster extends abstractengine {
     private scenemanager sceneManager;
     private iomanager inputManager;
     private OrthographicCamera camera;
+<<<<<<< Updated upstream
+=======
+    private collisionmanager collisionManager;
+    private exceptionhandler exceptionHandler;
+>>>>>>> Stashed changes
 
     private Texture playerTexture, enemyTexture, platformTexture, backgroundTexture, gameOverTexture;
     private Rectangle player;
@@ -42,12 +58,27 @@ public class gamemaster extends abstractengine {
 
     @Override
     protected void init() {
+<<<<<<< Updated upstream
         batch = new SpriteBatch();
         entityManager = new entitymanager();
         sceneManager = new scenemanager();
         inputManager = new iomanager();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
+=======
+        try {
+            // Initialize exception handler with a gdxlogger
+        	// In gamemaster, for example:
+        	exceptionHandler = new exceptionhandler(new gdxlogger(), new simpleshutdownstrategy());
+            batch = new SpriteBatch();
+            movementManager = new movementmanager(new fallingmovementstrategy(150));
+            entityManager = new entitymanager();
+            // Create a scene repository and pass it to the scene manager
+            scenemanager sceneManager = new scenemanager(new inmemoryscenerepository());
+            sceneManager.addScene(platformerScene);
+            sceneManager.addScene(gameOverScene);
+            sceneManager.loadScene("main");
+>>>>>>> Stashed changes
 
         playerTexture = new Texture("player.png");
         enemyTexture = new Texture("enemy.png");
@@ -63,8 +94,54 @@ public class gamemaster extends abstractengine {
         Rectangle firstPlatform = platforms.first();
         player = new Rectangle(firstPlatform.x + firstPlatform.width / 2 - 25, firstPlatform.y + firstPlatform.height, 50, 50);
 
+<<<<<<< Updated upstream
         // Spawn the initial enemy
         spawnEnemy();
+=======
+            player = new player(1, "player.png", startX, startY);
+            collisionManager.addCollidable(player);
+
+            platform firstPlatform = platforms.first();
+            player.setPosition(firstPlatform.getX() + firstPlatform.getWidth() / 2 - 25,
+                                 firstPlatform.getY() + firstPlatform.getHeight());
+
+            // Create scenes and add necessary entities
+            platformerScene = new platformerscene("main", backgroundTexture, Color.BLUE, camera);
+            platformerScene.addEntityToList(player);
+
+            gameOverScene = new gameoverscene("game over", gameOverTexture, Color.BLACK, camera);
+
+            // Add scenes to the repository via scene manager
+            sceneManager.addScene(platformerScene);
+            sceneManager.addScene(gameOverScene);
+           
+            
+            scenetransitionmanager sceneTransitionManager = new scenetransitionmanager(new inmemoryscenerepository());
+            sceneTransitionManager.addScene(platformerScene); // If needed, you can add a delegate method in repository.
+            sceneTransitionManager.addScene(gameOverScene);
+            sceneTransitionManager.loadScene("main");
+         
+         // In your init() method:
+            scenelifecyclemanager lifecycleManager = new scenelifecyclemanager(new inmemoryscenerepository());
+            lifecycleManager.loadScene("main");
+
+            // In your update() method, call:
+            lifecycleManager.update();
+
+            // In your render() method, call:
+            lifecycleManager.render(batch);
+
+
+            spawnEnemy();
+
+            for (int i = 0; i < enemies.size; i++) {
+                collisionManager.addCollidable(enemies.get(i));
+            }
+        } catch (GdxRuntimeException ex) {
+            exceptionHandler.exceptionOccurred(ex);
+            cleanup();
+        }
+>>>>>>> Stashed changes
     }
 
     private void generatePlatforms() {

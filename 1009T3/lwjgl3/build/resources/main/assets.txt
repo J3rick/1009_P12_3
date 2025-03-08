@@ -1,8 +1,5 @@
 background.png
-<<<<<<< Updated upstream
-=======
 enemy.png
->>>>>>> Stashed changes
 gameover.png
 libgdx.png
 platform.png
