@@ -1,45 +1,41 @@
 package abstractengine;
 
+import abstractengine.collision.icollisionstrategy;
+import abstractengine.interfaces.icollidable;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.badlogic.gdx.math.Rectangle;
+public class collisionmanager {
+    private List<icollidable> collidables;
+    private icollisionstrategy collisionStrategy;
 
-public final class collisionmanager {
-
-    private List<entity> entities;
-
-    public collisionmanager() {
-        entities = new ArrayList<>();
+    public collisionmanager(icollisionstrategy strategy) {
+        collidables = new ArrayList<>();
+        this.collisionStrategy = strategy;
     }
 
-    public void addEntity(entity entity) {
-        entities.add(entity);
+    public void addCollidable(icollidable obj) {
+        collidables.add(obj);
     }
- 
 
-    public void removeEntity(entity entity) {
-        entities.remove(entity);
+    public void removeCollidable(icollidable obj) {
+        collidables.remove(obj);
     }
 
     public void checkCollisions() {
-        for (int i = 0; i < entities.size(); i++) {
-            for (int j = i + 1; j < entities.size(); j++) {
-                entity obj1 = entities.get(i);
-                entity obj2 = entities.get(j);
-                if (detectCollision(obj1, obj2)) {
+        for (int i = 0; i < collidables.size(); i++) {
+            for (int j = i + 1; j < collidables.size(); j++) {
+                icollidable obj1 = collidables.get(i);
+                icollidable obj2 = collidables.get(j);
+                if (collisionStrategy.detectCollision(obj1, obj2)) {
                     handleCollision(obj1, obj2);
                 }
             }
         }
     }
 
-    private boolean detectCollision(entity obj1, entity obj2) {
-        return obj1.getBounds().overlaps(obj2.getBounds());
-    }
-
-    private void handleCollision(entity obj1, entity obj2) {
-        // Define collision handling logic here
-        System.out.println("Collision detected between entities: " + obj1 + " and " + obj2);
+    private void handleCollision(icollidable obj1, icollidable obj2) {
+        System.out.println("Collision detected between: " + obj1 + " and " + obj2);
+        // Additional collision response logic can be added here.
     }
 }

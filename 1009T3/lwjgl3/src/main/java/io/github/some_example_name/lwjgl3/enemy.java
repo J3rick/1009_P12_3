@@ -1,11 +1,12 @@
 package io.github.some_example_name.lwjgl3;
 
 import abstractengine.entity;
+import abstractengine.interfaces.imovable;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.Gdx;
 
-public class enemy extends entity {
+public class enemy extends entity implements imovable {
     private Texture texture;
     private static final float FALL_SPEED = 150; // Constant for controlled downward movement
 
@@ -16,7 +17,12 @@ public class enemy extends entity {
 
     @Override
     public void update() {
-        //setY(getY() - FALL_SPEED * Gdx.graphics.getDeltaTime()); // Move enemy downward safely
+        // You may choose to call updateMovement here or leave it empty if handled elsewhere.
+    }
+
+    @Override
+    public void updateMovement(float deltaTime) {
+        setY(getY() - FALL_SPEED * deltaTime);
     }
 
     @Override

@@ -1,12 +1,16 @@
 package abstractengine;
 
-import com.badlogic.gdx.Gdx;
+import abstractengine.interfaces.imovable;
+import abstractengine.movement.imovementstrategy;
 
 public class movementmanager {
-	private static final float FALL_SPEED = 150;
-	
-	public void updateEnemyMovement(entity enemy) {
-		enemy.setY(enemy.getY() - FALL_SPEED * Gdx.graphics.getDeltaTime());
-	}
+    private imovementstrategy movementStrategy;
 
+    public movementmanager(imovementstrategy strategy) {
+        this.movementStrategy = strategy;
+    }
+
+    public void updateEnemyMovement(imovable movable, float deltaTime) {
+        movementStrategy.updateMovement(movable, deltaTime);
+    }
 }

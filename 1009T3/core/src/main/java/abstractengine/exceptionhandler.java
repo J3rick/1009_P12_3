@@ -1,31 +1,44 @@
 package abstractengine;
 
-import com.badlogic.gdx.Gdx;
+import abstractengine.interfaces.ierrorhandler;
+import abstractengine.interfaces.ilogger;
+import abstractengine.interfaces.ishutdownstrategy;
 
-public class exceptionhandler {
-    private String userErrorMsg = "The following error has occured: ";
-    private String exceptionMsg = "";
+public class exceptionhandler implements ierrorhandler {
+    private String userErrorMsg = "The following error has occurred: ";
+    private ilogger logger;
+    private ishutdownstrategy shutdownStrategy;
 
-    public exceptionhandler(){
-        return;
+    public exceptionhandler(ilogger logger, ishutdownstrategy shutdownStrategy) {
+        this.logger = logger;
+        this.shutdownStrategy = shutdownStrategy;
     }
 
-    public String getUserErrorMsg(){
+    @Override
+    public String getUserErrorMsg() {
         return userErrorMsg;
     }
-    public void setUserErrorMsg(String userErrorMsg_in){
-        userErrorMsg = userErrorMsg_in;
-    }
-    public String getExceptionMsg(){
-        return exceptionMsg;
-    }
-    public void setExceptionMsg(Exception ex_in){
-        exceptionMsg = ex_in.getMessage();
+
+    @Override
+    public void setUserErrorMsg(String msg) {
+        this.userErrorMsg = msg;
     }
 
-    public void exceptionOccured(Exception ex_in){
-        Gdx.app.error("Error", userErrorMsg + ex_in.getMessage());
-        Gdx.app.exit();
+    // No error state is stored; these methods return empty or do nothing.
+    @Override
+    public String getExceptionMsg() {
+        return "";
+    }
+
+    @Override
+    public void setExceptionMsg(Exception ex) {
+        // Do nothing – error state is managed externally if needed.
+    }
+
+    @Override
+    public void exceptionOccurred(Exception ex) {
+        logger.logError(userErrorMsg + ex.getMessage());
+        // Delegate shutdown behavior to the injected strategy.
+        shutdownStrategy.shutdown(userErrorMsg + ex.getMessage());
     }
 }
-
