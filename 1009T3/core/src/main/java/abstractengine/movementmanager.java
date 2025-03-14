@@ -14,6 +14,10 @@ public class movementmanager {
         movementStrategy.updateMovement(movable, deltaTime);
     }
     
+    public void updateHorizontalEnemyMovement(imovable movable, float deltaTime) {
+    	movementStrategy.updateMovement(movable, deltaTime);
+    }
+
     public void updateCollectibleMovement(imovable movable, float deltaTime) {
         movementStrategy.updateMovement(movable, deltaTime);
     }

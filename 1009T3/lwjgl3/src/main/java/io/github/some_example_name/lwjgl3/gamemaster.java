@@ -52,6 +52,7 @@ public class gamemaster extends abstractengine {
     private platformerscene platformerScene;
     private gameoverscene gameOverScene;
     private boolean lifeLostRecently = false;
+    private boolean horizontalEnemyDespawned = true;
     private float velocityY = 0;
     private final float gravity = -700;
     private final float jumpPower = 400;
@@ -215,6 +216,42 @@ public class gamemaster extends abstractengine {
         }
     }
     
+    //Spawning horizontal enemy
+    private void spawnHorizontalEnemy() {
+    	boolean hasHorizontalEnemy = false;
+    	
+    	for (enemy e : enemies) {
+    		if (e.getMovementType() == enemy.MovementType.HORIZONTAL) {
+    			hasHorizontalEnemy = true;
+    			break;
+    		}
+    	}
+    	
+    	if (!hasHorizontalEnemy && horizontalEnemyDespawned) {
+    		horizontalEnemyDespawned = false;
+    		
+    		float leftEdgeOfScreen = worldCamera.position.x - (worldCamera.viewportWidth / 2);
+    		float x = leftEdgeOfScreen - 50;
+    		float y = player.getY() + (player.getHeight() / 4);
+    		
+    		String chosenEnemyTextureFile = "enemy.png";
+    		
+    		//Create horizontal enemy
+    		enemy horizontalEnemy = new enemy (
+    			enemies.size,
+    			chosenEnemyTextureFile,
+    			x,
+    			y,
+    			enemy.MovementType.HORIZONTAL
+    		);
+    		
+    		horizontalEnemy.setMovingRight(true);
+    		
+    		enemies.add(horizontalEnemy);
+    		collisionManager.addCollidable(horizontalEnemy);
+    	}
+    }
+    
     // Selects a random enemy image file when spawning an enemy.
     private void spawnCollectibles() {
         if (collectible.size < 2) {
@@ -327,6 +364,7 @@ public class gamemaster extends abstractengine {
                 if (lives > 0) {
                     resetPlayer();
                     enemies.clear();
+                    horizontalEnemyDespawned = true;
                     gameState = gamestate.PLAYING;
                     gameTimer.resume();
                 }
@@ -357,6 +395,10 @@ public class gamemaster extends abstractengine {
             spawnEnemy();
             spawnCollectibles();
         }
+        
+        if (MathUtils.randomBoolean(0.01f)) {
+        	spawnHorizontalEnemy();
+        }
 
         gameTimer.update();
         // Placeholder for how the timer will affect the scores or any other effects
@@ -370,9 +412,21 @@ public class gamemaster extends abstractengine {
         for (int i = enemies.size - 1; i >= 0; i--) {
             enemy e = enemies.get(i);
             e.update();
-            movementManager.updateEnemyMovement(e, Gdx.graphics.getDeltaTime());
-            if (e.getY() < 0) {
-                resetEnemyPosition(e);
+            
+            if (e.getMovementType() == enemy.MovementType.VERTICAL) {
+            	movementManager.updateEnemyMovement(e, Gdx.graphics.getDeltaTime());
+                if (e.getY() < 0) {
+                    resetEnemyPosition(e);
+                }
+            }
+            else if (e.getMovementType() == enemy.MovementType.HORIZONTAL) {
+	            movementManager.updateHorizontalEnemyMovement(e, Gdx.graphics.getDeltaTime());
+	                
+	            if (e.getX() > worldCamera.position.x + 600) {
+	            	collisionManager.removeCollidable(e);
+	            	enemies.removeIndex(i);
+	            	horizontalEnemyDespawned = true;
+	            }
             }
         }
     }
@@ -488,6 +542,7 @@ public class gamemaster extends abstractengine {
         isJumping = false;
         // Reset the flag so that future collisions can cause a life loss.
         lifeLostRecently = false;
+        horizontalEnemyDespawned = true;
     }
     
     @Override
