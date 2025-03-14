@@ -172,7 +172,9 @@ public class gamemaster extends abstractengine {
 
             // Initialize the audio manager with a background track and collision sound.
         	// Instead of previous instantiation, use:
-        	audioManager = new audiomanager("background_music.mp3", "collision.mp3", "collectible.mp3");
+        	// Initialize audio manager with all four audio files.
+        	audioManager = new audiomanager("background_music.mp3", "collision.mp3", "collectible.mp3", "fall.mp3");
+        	audioManager.playBackgroundMusic();
         	audioManager.playBackgroundMusic();
 
 
@@ -268,6 +270,22 @@ public class gamemaster extends abstractengine {
                 System.out.println("Collected item! Score: " + score);
                 break;
             }
+        }
+        
+ 
+        for (platform platform : platforms) {
+            if (player.getBounds().overlaps(platform.getBounds()) && velocityY < 0) {
+                player.landOnPlatform(platform.getBounds());
+                velocityY = 0;
+                isJumping = false;
+                onPlatform = true;
+                break;
+            }
+        }
+        if (!onPlatform && player.getY() < fallThreshold) {
+            // Play fall sound effect before handling life loss.
+            audioManager.playFallSound();
+            loseLife();
         }
     }
 
