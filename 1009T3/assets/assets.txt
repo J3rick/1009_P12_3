@@ -1,5 +1,11 @@
 background.png
+collectible1.png
+collectible2.png
+collectible3.png
 enemy.png
+enemy1.png
+enemy2.png
+enemy3.png
 gameover.png
 libgdx.png
 platform.png

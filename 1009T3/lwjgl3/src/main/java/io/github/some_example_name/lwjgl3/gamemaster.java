@@ -43,9 +43,11 @@ public class gamemaster extends abstractengine {
     private Texture playerTexture, platformTexture, backgroundTexture, gameOverTexture;
     // Instead of a single enemy texture, we now use an array of enemy texture file names.
     private String[] enemyTextureFiles;
+    private String[] collectibleTextureFiles;
 
     private player player;
     private Array<enemy> enemies;
+    private Array<collectibles> collectible;
     private Array<platform> platforms;
     private platformerscene platformerScene;
     private gameoverscene gameOverScene;
@@ -69,6 +71,9 @@ public class gamemaster extends abstractengine {
     private int lives = 5;
     private float gameOverTimer = 0;
     private final float gameOverDuration = 3;
+    
+    // Add this variable to track the score
+    private int score = 0;
     
     public enum gamestate { PLAYING, GAME_OVER, RESPAWNING }
     private gamestate gameState = gamestate.PLAYING;
@@ -114,6 +119,9 @@ public class gamemaster extends abstractengine {
             
             // Define an array of enemy image file names.
             enemyTextureFiles = new String[] {"enemy1.png", "enemy2.png", "enemy3.png"};
+            
+            // Define an array of collectible image file names.
+            collectibleTextureFiles = new String[] {"collectible1.png", "collectible2.png", "collectible3.png"};
 
             // Initialize BitmapFont for displaying lives and set its color to black.
             font = new BitmapFont();
@@ -121,6 +129,7 @@ public class gamemaster extends abstractengine {
 
             platforms = new Array<>();
             enemies = new Array<>();
+            collectible = new Array<>();
             generatePlatforms();
 
             player = new player(1, "player.png", startX, startY);
@@ -183,6 +192,17 @@ public class gamemaster extends abstractengine {
             enemies.add(new enemy(enemies.size, chosenEnemyTextureFile, x, heightThreshold));
         }
     }
+    
+    // Selects a random enemy image file when spawning an enemy.
+    private void spawnCollectibles() {
+        if (collectible.size < 2) {
+            float x = MathUtils.random(worldCamera.position.x - 400, worldCamera.position.x + 400);
+            int randomIndex = MathUtils.random(0, collectibleTextureFiles.length - 1);
+            String chosenCollectibleTextureFile = collectibleTextureFiles[randomIndex];
+            collectible.add(new collectibles(collectible.size, chosenCollectibleTextureFile, x, heightThreshold));
+
+        }
+    }
 
     private void loseLife() {
         if (!lifeLostRecently) {  // Only process if not already triggered
@@ -217,6 +237,22 @@ public class gamemaster extends abstractengine {
             }
         }
     }
+    
+    private void checkPlayerCollectibleCollisions() {
+    	for (int i = collectible.size - 1; i >= 0; i--) { // Loop backward to avoid index issues
+            collectibles e = collectible.get(i);
+            
+            if (player.getBounds().overlaps(e.getBounds())) {
+                score += 10; // Increase score
+                collisionManager.removeCollidable(e); // Remove from collision manager
+                collectible.removeIndex(i); // Remove from the collectibles array
+                
+                System.out.println("Collected item! Score: " + score); // Debugging log
+                
+                break; // Stop checking after collecting one
+            }
+        }
+    }
 
     @Override
     protected void update() {
@@ -234,16 +270,19 @@ public class gamemaster extends abstractengine {
         }
 
         updateEnemies();
+        updateCollectibles();
         updatePlayer();
         updateCamera();
         updatePlatforms();
 
         checkPlatformCollisions();
         checkPlayerEnemyCollisions();
+        checkPlayerCollectibleCollisions();
         collisionManager.checkCollisions();
 
         if (MathUtils.randomBoolean(0.01f)) {
             spawnEnemy();
+            spawnCollectibles();
         }
     }
 
@@ -254,6 +293,17 @@ public class gamemaster extends abstractengine {
             movementManager.updateEnemyMovement(e, Gdx.graphics.getDeltaTime());
             if (e.getY() < 0) {
                 resetEnemyPosition(e);
+            }
+        }
+    }
+    
+    private void updateCollectibles() {
+        for (int i = collectible.size - 1; i >= 0; i--) {
+        	collectibles e = collectible.get(i);
+            e.update();
+            movementManager.updateCollectibleMovement(e, Gdx.graphics.getDeltaTime());
+            if (e.getY() < 0) {
+                resetCollectiblePosition(e);
             }
         }
     }
@@ -295,6 +345,12 @@ public class gamemaster extends abstractengine {
         e.setX(randomX);
         e.setY(480);
     }
+    
+    private void resetCollectiblePosition(collectibles e) {
+        float randomX = MathUtils.random(worldCamera.position.x - 400, worldCamera.position.x + 400);
+        e.setX(randomX);
+        e.setY(480);
+    }
 
     @Override
     protected void draw() {
@@ -314,6 +370,9 @@ public class gamemaster extends abstractengine {
         for (enemy e : enemies) {
             e.draw(batch);
         }
+        for (collectibles e : collectible) {
+            e.draw(batch);
+        }
         for (platform platform : platforms) {
             batch.draw(platformTexture, platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight());
         }
@@ -330,6 +389,7 @@ public class gamemaster extends abstractengine {
         batch.setProjectionMatrix(uiCamera.combined);
         batch.begin();
         font.draw(batch, "Lives: " + lives, 10, VIRTUAL_HEIGHT - 10);
+        font.draw(batch, "Score: " + score, 10, VIRTUAL_HEIGHT - 30); // Add score display
         batch.end();
     }
 
