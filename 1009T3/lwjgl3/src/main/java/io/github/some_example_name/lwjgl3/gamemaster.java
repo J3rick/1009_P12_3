@@ -62,6 +62,7 @@ public class gamemaster extends abstractengine {
     private final float startX = 100, startY = 150;
     private final float fallThreshold = -100;
     private final float heightThreshold = 480;
+    private gametimer gameTimer;
 
     // Virtual resolution constants
     private final float VIRTUAL_WIDTH = 800;
@@ -162,6 +163,8 @@ public class gamemaster extends abstractengine {
             for (int i = 0; i < enemies.size; i++) {
                 collisionManager.addCollidable(enemies.get(i));
             }
+
+            gameTimer = new gametimer();
         } catch (GdxRuntimeException ex) {
             exceptionHandler.exceptionOccurred(ex);
             cleanup();
@@ -229,6 +232,7 @@ public class gamemaster extends abstractengine {
             lifeLostRecently = true; // Mark that we've lost a life for this event
             gameState = gamestate.GAME_OVER;
             gameOverTimer = gameOverDuration;
+            gameTimer.pause(); // Pause the timer
         }
     }
 
@@ -324,9 +328,18 @@ public class gamemaster extends abstractengine {
                     resetPlayer();
                     enemies.clear();
                     gameState = gamestate.PLAYING;
+                    gameTimer.resume();
+                }
+                else{
+                    // Handle game over logic (e.g., show game over screen)
+                    gameTimer.reset();
                 }
             }
             return;
+        }
+
+        if (gameState == gamestate.PLAYING) {
+            gameTimer.update();
         }
 
         updateEnemies();
@@ -344,6 +357,13 @@ public class gamemaster extends abstractengine {
             spawnEnemy();
             spawnCollectibles();
         }
+
+        gameTimer.update();
+        // Placeholder for how the timer will affect the scores or any other effects
+        // long elapsedTime = gameTimer.getElapsedTime();
+        // if (elapsedTime > someThreshold) {
+        //     score += someBonus;
+        // }
     }
 
     private void updateEnemies() {
@@ -450,6 +470,7 @@ public class gamemaster extends abstractengine {
         batch.begin();
         font.draw(batch, "Lives: " + lives, 10, VIRTUAL_HEIGHT - 10);
         font.draw(batch, "Score: " + score, 10, VIRTUAL_HEIGHT - 30); // Add score display
+        font.draw(batch, "Time: " + gameTimer.getElapsedTime() / 1000, 10, VIRTUAL_HEIGHT - 50);
         batch.end();
     }
 
