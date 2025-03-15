@@ -1,11 +1,15 @@
 background.png
+background_music.mp3
+collectible.mp3
 collectible1.png
 collectible2.png
 collectible3.png
+collision.mp3
 enemy.png
 enemy1.png
 enemy2.png
 enemy3.png
+fall.mp3
 gameover.png
 libgdx.png
 platform.png

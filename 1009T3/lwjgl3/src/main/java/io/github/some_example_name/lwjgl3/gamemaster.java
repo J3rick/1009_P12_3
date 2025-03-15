@@ -52,6 +52,7 @@ public class gamemaster extends abstractengine {
     private platformerscene platformerScene;
     private gameoverscene gameOverScene;
     private boolean lifeLostRecently = false;
+    private boolean horizontalEnemyDespawned = true;
     private float velocityY = 0;
     private final float gravity = -700;
     private final float jumpPower = 400;
@@ -62,6 +63,7 @@ public class gamemaster extends abstractengine {
     private final float startX = 100, startY = 150;
     private final float fallThreshold = -100;
     private final float heightThreshold = 480;
+    private gametimer gameTimer;
 
     // Virtual resolution constants
     private final float VIRTUAL_WIDTH = 800;
@@ -162,6 +164,8 @@ public class gamemaster extends abstractengine {
             for (int i = 0; i < enemies.size; i++) {
                 collisionManager.addCollidable(enemies.get(i));
             }
+
+            gameTimer = new gametimer();
         } catch (GdxRuntimeException ex) {
             exceptionHandler.exceptionOccurred(ex);
             cleanup();
@@ -212,6 +216,42 @@ public class gamemaster extends abstractengine {
         }
     }
     
+    //Spawning horizontal enemy
+    private void spawnHorizontalEnemy() {
+    	boolean hasHorizontalEnemy = false;
+    	
+    	for (enemy e : enemies) {
+    		if (e.getMovementType() == enemy.MovementType.HORIZONTAL) {
+    			hasHorizontalEnemy = true;
+    			break;
+    		}
+    	}
+    	
+    	if (!hasHorizontalEnemy && horizontalEnemyDespawned) {
+    		horizontalEnemyDespawned = false;
+    		
+    		float leftEdgeOfScreen = worldCamera.position.x - (worldCamera.viewportWidth / 2);
+    		float x = leftEdgeOfScreen - 50;
+    		float y = player.getY() + (player.getHeight() / 4);
+    		
+    		String chosenEnemyTextureFile = "enemy.png";
+    		
+    		//Create horizontal enemy
+    		enemy horizontalEnemy = new enemy (
+    			enemies.size,
+    			chosenEnemyTextureFile,
+    			x,
+    			y,
+    			enemy.MovementType.HORIZONTAL
+    		);
+    		
+    		horizontalEnemy.setMovingRight(true);
+    		
+    		enemies.add(horizontalEnemy);
+    		collisionManager.addCollidable(horizontalEnemy);
+    	}
+    }
+    
     // Selects a random enemy image file when spawning an enemy.
     private void spawnCollectibles() {
         if (collectible.size < 2) {
@@ -229,6 +269,7 @@ public class gamemaster extends abstractengine {
             lifeLostRecently = true; // Mark that we've lost a life for this event
             gameState = gamestate.GAME_OVER;
             gameOverTimer = gameOverDuration;
+            gameTimer.pause(); // Pause the timer
         }
     }
 
@@ -323,10 +364,20 @@ public class gamemaster extends abstractengine {
                 if (lives > 0) {
                     resetPlayer();
                     enemies.clear();
+                    horizontalEnemyDespawned = true;
                     gameState = gamestate.PLAYING;
+                    gameTimer.resume();
+                }
+                else{
+                    // Handle game over logic (e.g., show game over screen)
+                    gameTimer.reset();
                 }
             }
             return;
+        }
+
+        if (gameState == gamestate.PLAYING) {
+            gameTimer.update();
         }
 
         updateEnemies();
@@ -344,15 +395,38 @@ public class gamemaster extends abstractengine {
             spawnEnemy();
             spawnCollectibles();
         }
+        
+        if (MathUtils.randomBoolean(0.01f)) {
+        	spawnHorizontalEnemy();
+        }
+
+        gameTimer.update();
+        // Placeholder for how the timer will affect the scores or any other effects
+        // long elapsedTime = gameTimer.getElapsedTime();
+        // if (elapsedTime > someThreshold) {
+        //     score += someBonus;
+        // }
     }
 
     private void updateEnemies() {
         for (int i = enemies.size - 1; i >= 0; i--) {
             enemy e = enemies.get(i);
             e.update();
-            movementManager.updateEnemyMovement(e, Gdx.graphics.getDeltaTime());
-            if (e.getY() < 0) {
-                resetEnemyPosition(e);
+            
+            if (e.getMovementType() == enemy.MovementType.VERTICAL) {
+            	movementManager.updateEnemyMovement(e, Gdx.graphics.getDeltaTime());
+                if (e.getY() < 0) {
+                    resetEnemyPosition(e);
+                }
+            }
+            else if (e.getMovementType() == enemy.MovementType.HORIZONTAL) {
+	            movementManager.updateHorizontalEnemyMovement(e, Gdx.graphics.getDeltaTime());
+	                
+	            if (e.getX() > worldCamera.position.x + 600) {
+	            	collisionManager.removeCollidable(e);
+	            	enemies.removeIndex(i);
+	            	horizontalEnemyDespawned = true;
+	            }
             }
         }
     }
@@ -450,6 +524,7 @@ public class gamemaster extends abstractengine {
         batch.begin();
         font.draw(batch, "Lives: " + lives, 10, VIRTUAL_HEIGHT - 10);
         font.draw(batch, "Score: " + score, 10, VIRTUAL_HEIGHT - 30); // Add score display
+        font.draw(batch, "Time: " + gameTimer.getElapsedTime() / 1000, 10, VIRTUAL_HEIGHT - 50);
         batch.end();
     }
 
@@ -467,6 +542,7 @@ public class gamemaster extends abstractengine {
         isJumping = false;
         // Reset the flag so that future collisions can cause a life loss.
         lifeLostRecently = false;
+        horizontalEnemyDespawned = true;
     }
     
     @Override
