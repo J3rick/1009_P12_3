@@ -51,8 +51,13 @@ public class gamemaster extends abstractengine {
     private Array<platform> platforms;
     private platformerscene platformerScene;
     private gameoverscene gameOverScene;
+    private factsScene factScene;
+    private Texture factsBg;
     private boolean lifeLostRecently = false;
     private boolean horizontalEnemyDespawned = true;
+    
+    private scenetransitionmanager sceneTransitionManager;
+
     private float velocityY = 0;
     private final float gravity = -700;
     private final float jumpPower = 400;
@@ -78,7 +83,7 @@ public class gamemaster extends abstractengine {
     // Score tracking
     private int score = 0;
     
-    public enum gamestate { PLAYING, GAME_OVER, RESPAWNING }
+    public enum gamestate { PLAYING, GAME_OVER, RESPAWNING, PAUSED }
     private gamestate gameState = gamestate.PLAYING;
     
     // BitmapFont to display lives and score
@@ -87,17 +92,27 @@ public class gamemaster extends abstractengine {
     @Override
     protected void init() {
         try {
+        	// Inside your game initialization class
+            factsBg = new Texture("facts_background.png");  // Load background texture
+            
+            
             exceptionHandler = new exceptionhandler(new gdxlogger(), new simpleshutdownstrategy());
             batch = new SpriteBatch();
             movementManager = new movementmanager(new fallingmovementstrategy(150));
             entityManager = new entitymanager();
-            scenemanager sceneManager = new scenemanager(new inmemoryscenerepository());
+            sceneManager = new scenemanager(new inmemoryscenerepository());
             sceneManager.addScene(platformerScene);
             sceneManager.addScene(gameOverScene);
+            sceneManager.addScene(factScene);
             sceneManager.loadScene("main");
 
             sceneManager.update();
             sceneManager.render(batch);
+            
+            
+            
+            
+
             inputManager = new iomanager();
           
             // Initialize world camera and viewport
@@ -150,10 +165,13 @@ public class gamemaster extends abstractengine {
 
             sceneManager.addScene(platformerScene);
             sceneManager.addScene(gameOverScene);
+            sceneManager.addScene(factScene);
             
-            scenetransitionmanager sceneTransitionManager = new scenetransitionmanager(new inmemoryscenerepository());
+            sceneTransitionManager = new scenetransitionmanager(new inmemoryscenerepository());
+            factScene = new factsScene("facts", factsBg, worldCamera, "Did you know? The Earth is round!", sceneTransitionManager);
             sceneTransitionManager.addScene(platformerScene);
             sceneTransitionManager.addScene(gameOverScene);
+            sceneTransitionManager.addScene(factScene);
             sceneTransitionManager.loadScene("main");
             
             scenelifecyclemanager lifecycleManager = new scenelifecyclemanager(new inmemoryscenerepository());
@@ -281,17 +299,6 @@ public class gamemaster extends abstractengine {
             }
         }
         
-        for (int i = collectible.size - 1; i >= 0; i--) {
-            collectibles e = collectible.get(i);
-            if (player.getBounds().overlaps(e.getBounds())) {
-                score += 10;
-                audioManager.playCollectibleSound();
-                collisionManager.removeCollidable(e);
-                collectible.removeIndex(i);
-                System.out.println("Collected item! Score: " + score);
-                break;
-            }
-        }
     }
 
     private void checkPlayerEnemyCollisions() {
@@ -304,9 +311,20 @@ public class gamemaster extends abstractengine {
     }
     
     private void checkPlayerCollectibleCollisions() {
+
         for (int i = collectible.size - 1; i >= 0; i--) {
             collectibles e = collectible.get(i);
             if (player.getBounds().overlaps(e.getBounds())) {
+            	if (e.getCollect() == false) {
+            		e.setCollect();
+            		
+            		gameState = gamestate.PAUSED;  // ✅ Pause the game
+            		sceneTransitionManager.loadScene("facts");
+            		//sceneTransitionManager.loadScene("factScene");
+            		//sceneManager.loadScene("facts");
+            	}
+            	
+            	audioManager.playCollectibleSound();
                 score += 10;
                 collisionManager.removeCollidable(e);
                 collectible.removeIndex(i);
@@ -315,6 +333,20 @@ public class gamemaster extends abstractengine {
             }
         }
     }
+    
+    public void setGameState(gamestate newState) {
+    	System.out.println("Game state changing from " + this.gameState + " to " + newState);
+        this.gameState = newState;
+        
+        if (newState == gamestate.PLAYING) {
+            // ✅ Reload the background to ensure it renders
+
+            backgroundTexture = new Texture("background.png");
+            System.out.println("Background texture reloaded after pause.");
+            
+        }
+    }
+
 
     @Override
     protected void update() {
@@ -344,6 +376,15 @@ public class gamemaster extends abstractengine {
 
         if (gameState == gamestate.PLAYING) {
             gameTimer.update();
+            sceneTransitionManager.update();
+        }
+        if (gameState == gamestate.PAUSED) {
+            if (sceneTransitionManager.getCurrentScene() != null) {
+                sceneTransitionManager.update();
+            } else {
+                System.out.println("WARNING: No active scene to update");
+            }
+            return;  // Stop updating game logic while paused
         }
 
         updateEnemies();
@@ -356,6 +397,7 @@ public class gamemaster extends abstractengine {
         checkPlayerEnemyCollisions();
         checkPlayerCollectibleCollisions();
         collisionManager.checkCollisions();
+        
 
         if (MathUtils.randomBoolean(0.01f)) {
             spawnEnemy();
@@ -454,26 +496,45 @@ public class gamemaster extends abstractengine {
         Gdx.gl.glClearColor(0, 0, 0, 1);
 
         batch.begin();
-        // Draw the background relative to the world camera so it fills the visible area.
-        batch.draw(backgroundTexture, worldCamera.position.x - VIRTUAL_WIDTH / 2, 
-                   worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
-        // Draw game world objects.
-        batch.draw(playerTexture, player.getX(), player.getY(), player.getWidth(), player.getHeight());
-        for (enemy e : enemies) {
-            e.draw(batch);
-        }
-        for (collectibles e : collectible) {
-            e.draw(batch);
-        }
-        for (platform platform : platforms) {
-            batch.draw(platformTexture, platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight());
-        }
-        if (gameState == gamestate.GAME_OVER) {
-            float gameOverWidth = gameOverTexture.getWidth();
-            float gameOverHeight = gameOverTexture.getHeight();
-            float centerX = worldCamera.position.x - gameOverWidth / 2;
-            float centerY = worldCamera.position.y - gameOverHeight / 2;
-            batch.draw(gameOverTexture, centerX, centerY);
+        
+        if (gameState == gamestate.PAUSED) {
+        	if (sceneTransitionManager.getCurrentScene() != null) {
+                sceneTransitionManager.render(batch);
+            } else {
+                System.out.println("WARNING: No active scene to render");
+            }
+        } else {
+	        // Draw the background relative to the world camera so it fills the visible area.
+	        //batch.draw(backgroundTexture, worldCamera.position.x - VIRTUAL_WIDTH / 2, 
+	          //         worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        	
+        	// ✅ Draw the background FIRST!
+            if (backgroundTexture != null) {
+                batch.draw(backgroundTexture, worldCamera.position.x - VIRTUAL_WIDTH / 2,
+                           worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+                //System.out.println("✅ Background is being drawn after unpausing.");
+            } else {
+                System.out.println("❌ WARNING: backgroundTexture is NULL after unpausing!");
+            }
+	        
+	        // Draw game world objects.
+	        batch.draw(playerTexture, player.getX(), player.getY(), player.getWidth(), player.getHeight());
+	        for (enemy e : enemies) {
+	            e.draw(batch);
+	        }
+	        for (collectibles e : collectible) {
+	            e.draw(batch);
+	        }
+	        for (platform platform : platforms) {
+	            batch.draw(platformTexture, platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight());
+	        }
+	        if (gameState == gamestate.GAME_OVER) {
+	            float gameOverWidth = gameOverTexture.getWidth();
+	            float gameOverHeight = gameOverTexture.getHeight();
+	            float centerX = worldCamera.position.x - gameOverWidth / 2;
+	            float centerY = worldCamera.position.y - gameOverHeight / 2;
+	            batch.draw(gameOverTexture, centerX, centerY);
+	        }
         }
         batch.end();
 
