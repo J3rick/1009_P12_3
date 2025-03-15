@@ -56,7 +56,8 @@ public class gamemaster extends abstractengine {
     private float velocityY = 0;
     private final float gravity = -700;
     private final float jumpPower = 400;
-    private final float speed = 200;
+    // Replace the final speed with a mutable field for the player's speed.
+    private float playerSpeed = 200;
     private boolean isJumping = false;
     private float lastPlatformX = 100;
     private boolean onPlatform;
@@ -74,13 +75,13 @@ public class gamemaster extends abstractengine {
     private float gameOverTimer = 0;
     private final float gameOverDuration = 3;
     
-    // Add this variable to track the score
+    // Score tracking
     private int score = 0;
     
     public enum gamestate { PLAYING, GAME_OVER, RESPAWNING }
     private gamestate gameState = gamestate.PLAYING;
     
-    // BitmapFont to display lives on screen
+    // BitmapFont to display lives and score
     private BitmapFont font;
 
     @Override
@@ -119,10 +120,10 @@ public class gamemaster extends abstractengine {
             backgroundTexture = new Texture("background.png");
             gameOverTexture = new Texture("gameover.png");
             
-            // Define an array of enemy image file names.
+            // Define an array of enemy texture file names.
             enemyTextureFiles = new String[] {"enemy1.png", "enemy2.png", "enemy3.png"};
             
-            // Define an array of collectible image file names.
+            // Define an array of collectible texture file names.
             collectibleTextureFiles = new String[] {"collectible1.png", "collectible2.png", "collectible3.png"};
 
             // Initialize BitmapFont for displaying lives and set its color to black.
@@ -166,31 +167,17 @@ public class gamemaster extends abstractengine {
             }
 
             gameTimer = new gametimer();
-        } catch (GdxRuntimeException ex) {
-            exceptionHandler.exceptionOccurred(ex);
-            cleanup();
-        }
-        
-        try {
-            // ... your existing init code ...
-
-            // Initialize the audio manager with a background track and collision sound.
-        	// Instead of previous instantiation, use:
-        	// Initialize audio manager with all four audio files.
-        	audioManager = new audiomanager("background_music.mp3", "collision.mp3", "collectible.mp3", "fall.mp3");
-        	audioManager.playBackgroundMusic();
-        	audioManager.playBackgroundMusic();
-
-
-            // ... the rest of your init() ...
+            
+            // Initialize audio manager with all four audio files.
+            // Ensure that "background_music.mp3", "collision.mp3", "collectible.mp3", and "fall.mp3" are in your assets.
+            audioManager = new audiomanager("background_music.mp3", "collision.mp3", "collectible.mp3", "fall.mp3");
+            audioManager.playBackgroundMusic();
         } catch (GdxRuntimeException ex) {
             exceptionHandler.exceptionOccurred(ex);
             cleanup();
         }
     }
     
-    
-
     private void generatePlatforms() {
         for (int i = 0; i < 5; i++) {
             addPlatform();
@@ -198,15 +185,19 @@ public class gamemaster extends abstractengine {
     }
 
     private void addPlatform() {
-        float x = lastPlatformX + MathUtils.random(200, 400);
+        // Horizontal gap now between 150 and 300 pixels (was 200 to 400).
+        float x = lastPlatformX + MathUtils.random(150, 300);
+        // Vertical position remains between 100 and 300.
         float y = MathUtils.random(100, 300);
-        platform newPlatform = new platform(platforms.size, x, y, 150, 20);
+        // Increase platform width moderately from 150 to 200.
+        platform newPlatform = new platform(platforms.size, x, y, 200, 20);
         platforms.add(newPlatform);
         collisionManager.addCollidable(newPlatform);
         lastPlatformX = x;
     }
 
-    // Selects a random enemy image file when spawning an enemy.
+
+    // Spawn a vertical enemy.
     private void spawnEnemy() {
         if (enemies.size < 2) {
             float x = MathUtils.random(worldCamera.position.x - 400, worldCamera.position.x + 400);
@@ -216,50 +207,35 @@ public class gamemaster extends abstractengine {
         }
     }
     
-    //Spawning horizontal enemy
+    // Spawning horizontal enemy.
     private void spawnHorizontalEnemy() {
-    	boolean hasHorizontalEnemy = false;
-    	
-    	for (enemy e : enemies) {
-    		if (e.getMovementType() == enemy.MovementType.HORIZONTAL) {
-    			hasHorizontalEnemy = true;
-    			break;
-    		}
-    	}
-    	
-    	if (!hasHorizontalEnemy && horizontalEnemyDespawned) {
-    		horizontalEnemyDespawned = false;
-    		
-    		float leftEdgeOfScreen = worldCamera.position.x - (worldCamera.viewportWidth / 2);
-    		float x = leftEdgeOfScreen - 50;
-    		float y = player.getY() + (player.getHeight() / 4);
-    		
-    		String chosenEnemyTextureFile = "enemy.png";
-    		
-    		//Create horizontal enemy
-    		enemy horizontalEnemy = new enemy (
-    			enemies.size,
-    			chosenEnemyTextureFile,
-    			x,
-    			y,
-    			enemy.MovementType.HORIZONTAL
-    		);
-    		
-    		horizontalEnemy.setMovingRight(true);
-    		
-    		enemies.add(horizontalEnemy);
-    		collisionManager.addCollidable(horizontalEnemy);
-    	}
+        boolean hasHorizontalEnemy = false;
+        for (enemy e : enemies) {
+            if (e.getMovementType() == enemy.MovementType.HORIZONTAL) {
+                hasHorizontalEnemy = true;
+                break;
+            }
+        }
+        if (!hasHorizontalEnemy && horizontalEnemyDespawned) {
+            horizontalEnemyDespawned = false;
+            float leftEdgeOfScreen = worldCamera.position.x - (worldCamera.viewportWidth / 2);
+            float x = leftEdgeOfScreen - 50;
+            float y = player.getY() + (player.getHeight() / 4);
+            String chosenEnemyTextureFile = "enemy.png";
+            enemy horizontalEnemy = new enemy(enemies.size, chosenEnemyTextureFile, x, y, enemy.MovementType.HORIZONTAL);
+            horizontalEnemy.setMovingRight(true);
+            enemies.add(horizontalEnemy);
+            collisionManager.addCollidable(horizontalEnemy);
+        }
     }
     
-    // Selects a random enemy image file when spawning an enemy.
+    // Spawn collectibles.
     private void spawnCollectibles() {
         if (collectible.size < 2) {
             float x = MathUtils.random(worldCamera.position.x - 400, worldCamera.position.x + 400);
             int randomIndex = MathUtils.random(0, collectibleTextureFiles.length - 1);
             String chosenCollectibleTextureFile = collectibleTextureFiles[randomIndex];
             collectible.add(new collectibles(collectible.size, chosenCollectibleTextureFile, x, heightThreshold));
-
         }
     }
 
@@ -267,9 +243,13 @@ public class gamemaster extends abstractengine {
         if (!lifeLostRecently) {  // Only process if not already triggered
             lives--;
             lifeLostRecently = true; // Mark that we've lost a life for this event
+            // If the player's speed is still at the default (200), apply the penalty.
+            if (playerSpeed == 200) {
+                playerSpeed = 150;  // Reduce speed as a penalty.
+            }
             gameState = gamestate.GAME_OVER;
             gameOverTimer = gameOverDuration;
-            gameTimer.pause(); // Pause the timer
+            gameTimer.pause(); // Pause the timer.
         }
     }
 
@@ -285,48 +265,29 @@ public class gamemaster extends abstractengine {
             }
         }
         if (!onPlatform && player.getY() < fallThreshold) {
+            // Play fall sound before handling life loss.
+            audioManager.playFallSound();
             loseLife();
         }
         
         for (enemy e : enemies) {
             if (player.getBounds().overlaps(e.getBounds())) {
-                // Play the collision sound
                 audioManager.playCollisionSound();
-                
                 loseLife();
                 break;
             }
         }
+        
         for (int i = collectible.size - 1; i >= 0; i--) {
             collectibles e = collectible.get(i);
             if (player.getBounds().overlaps(e.getBounds())) {
-                // Increase score (or perform other logic)
                 score += 10;
-                // Play the collectible sound effect
                 audioManager.playCollectibleSound();
-                // Remove the collectible from the collision manager and the array.
                 collisionManager.removeCollidable(e);
                 collectible.removeIndex(i);
-                
                 System.out.println("Collected item! Score: " + score);
                 break;
             }
-        }
-        
- 
-        for (platform platform : platforms) {
-            if (player.getBounds().overlaps(platform.getBounds()) && velocityY < 0) {
-                player.landOnPlatform(platform.getBounds());
-                velocityY = 0;
-                isJumping = false;
-                onPlatform = true;
-                break;
-            }
-        }
-        if (!onPlatform && player.getY() < fallThreshold) {
-            // Play fall sound effect before handling life loss.
-            audioManager.playFallSound();
-            loseLife();
         }
     }
 
@@ -340,17 +301,14 @@ public class gamemaster extends abstractengine {
     }
     
     private void checkPlayerCollectibleCollisions() {
-    	for (int i = collectible.size - 1; i >= 0; i--) { // Loop backward to avoid index issues
+        for (int i = collectible.size - 1; i >= 0; i--) {
             collectibles e = collectible.get(i);
-            
             if (player.getBounds().overlaps(e.getBounds())) {
-                score += 10; // Increase score
-                collisionManager.removeCollidable(e); // Remove from collision manager
-                collectible.removeIndex(i); // Remove from the collectibles array
-                
-                System.out.println("Collected item! Score: " + score); // Debugging log
-                
-                break; // Stop checking after collecting one
+                score += 10;
+                collisionManager.removeCollidable(e);
+                collectible.removeIndex(i);
+                System.out.println("Collected item! Score: " + score);
+                break;
             }
         }
     }
@@ -367,9 +325,8 @@ public class gamemaster extends abstractengine {
                     horizontalEnemyDespawned = true;
                     gameState = gamestate.PLAYING;
                     gameTimer.resume();
-                }
-                else{
-                    // Handle game over logic (e.g., show game over screen)
+                } else {
+                    // Handle final game over (e.g., show game over screen).
                     gameTimer.reset();
                 }
             }
@@ -397,43 +354,35 @@ public class gamemaster extends abstractengine {
         }
         
         if (MathUtils.randomBoolean(0.01f)) {
-        	spawnHorizontalEnemy();
+            spawnHorizontalEnemy();
         }
 
         gameTimer.update();
-        // Placeholder for how the timer will affect the scores or any other effects
-        // long elapsedTime = gameTimer.getElapsedTime();
-        // if (elapsedTime > someThreshold) {
-        //     score += someBonus;
-        // }
     }
 
     private void updateEnemies() {
         for (int i = enemies.size - 1; i >= 0; i--) {
             enemy e = enemies.get(i);
             e.update();
-            
             if (e.getMovementType() == enemy.MovementType.VERTICAL) {
-            	movementManager.updateEnemyMovement(e, Gdx.graphics.getDeltaTime());
+                movementManager.updateEnemyMovement(e, Gdx.graphics.getDeltaTime());
                 if (e.getY() < 0) {
                     resetEnemyPosition(e);
                 }
-            }
-            else if (e.getMovementType() == enemy.MovementType.HORIZONTAL) {
-	            movementManager.updateHorizontalEnemyMovement(e, Gdx.graphics.getDeltaTime());
-	                
-	            if (e.getX() > worldCamera.position.x + 600) {
-	            	collisionManager.removeCollidable(e);
-	            	enemies.removeIndex(i);
-	            	horizontalEnemyDespawned = true;
-	            }
+            } else if (e.getMovementType() == enemy.MovementType.HORIZONTAL) {
+                movementManager.updateHorizontalEnemyMovement(e, Gdx.graphics.getDeltaTime());
+                if (e.getX() > worldCamera.position.x + 600) {
+                    collisionManager.removeCollidable(e);
+                    enemies.removeIndex(i);
+                    horizontalEnemyDespawned = true;
+                }
             }
         }
     }
     
     private void updateCollectibles() {
         for (int i = collectible.size - 1; i >= 0; i--) {
-        	collectibles e = collectible.get(i);
+            collectibles e = collectible.get(i);
             e.update();
             movementManager.updateCollectibleMovement(e, Gdx.graphics.getDeltaTime());
             if (e.getY() < 0) {
@@ -444,10 +393,10 @@ public class gamemaster extends abstractengine {
 
     private void updatePlayer() {
         if (inputManager.isMovingLeft()) {
-            player.setX(player.getX() - speed * Gdx.graphics.getDeltaTime());
+            player.setX(player.getX() - playerSpeed * Gdx.graphics.getDeltaTime());
         }
         if (inputManager.isMovingRight()) {
-            player.setX(player.getX() + speed * Gdx.graphics.getDeltaTime());
+            player.setX(player.getX() + playerSpeed * Gdx.graphics.getDeltaTime());
         }
         if (inputManager.isJumping() && !isJumping) {
             velocityY = jumpPower;
@@ -519,11 +468,11 @@ public class gamemaster extends abstractengine {
         }
         batch.end();
 
-        // Draw UI elements (like lives) using the fixed UI camera.
+        // Draw UI elements (like lives, score, and timer) using the fixed UI camera.
         batch.setProjectionMatrix(uiCamera.combined);
         batch.begin();
         font.draw(batch, "Lives: " + lives, 10, VIRTUAL_HEIGHT - 10);
-        font.draw(batch, "Score: " + score, 10, VIRTUAL_HEIGHT - 30); // Add score display
+        font.draw(batch, "Score: " + score, 10, VIRTUAL_HEIGHT - 30);
         font.draw(batch, "Time: " + gameTimer.getElapsedTime() / 1000, 10, VIRTUAL_HEIGHT - 50);
         batch.end();
     }
@@ -543,6 +492,7 @@ public class gamemaster extends abstractengine {
         // Reset the flag so that future collisions can cause a life loss.
         lifeLostRecently = false;
         horizontalEnemyDespawned = true;
+        // Note: We do NOT reset playerSpeed here so the penalty persists into the next game.
     }
     
     @Override
@@ -554,9 +504,5 @@ public class gamemaster extends abstractengine {
         gameOverTexture.dispose();
         font.dispose();
         audioManager.dispose();
-      
     }
-    
-    
-    
 }
