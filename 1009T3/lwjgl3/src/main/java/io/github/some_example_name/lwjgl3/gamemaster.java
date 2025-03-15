@@ -241,13 +241,16 @@ public class gamemaster extends abstractengine {
 
     private void loseLife() {
         if (!lifeLostRecently) {  // Only process if not already triggered
+            collectible.clear();
+            enemies.clear();
+            horizontalEnemyDespawned = true;
             lives--;
             lifeLostRecently = true; // Mark that we've lost a life for this event
             // If the player's speed is still at the default (200), apply the penalty.
             if (playerSpeed == 200) {
                 playerSpeed = 150;  // Reduce speed as a penalty.
             }
-            gameState = gamestate.GAME_OVER;
+            gameState = gamestate.RESPAWNING;
             gameOverTimer = gameOverDuration;
             gameTimer.pause(); // Pause the timer.
         }
@@ -318,16 +321,22 @@ public class gamemaster extends abstractengine {
         inputManager.updateInput();
         if (gameState == gamestate.GAME_OVER) {
             gameOverTimer -= Gdx.graphics.getDeltaTime();
+//            if (gameOverTimer <= 0) {
+//                // Handle final game over (e.g., show game over screen).
+//                gameTimer.reset();
+//            }
+            return;
+        }
+
+        if (gameState == gamestate.RESPAWNING) {
+            gameOverTimer -= Gdx.graphics.getDeltaTime();
             if (gameOverTimer <= 0) {
                 if (lives > 0) {
                     resetPlayer();
-                    enemies.clear();
-                    horizontalEnemyDespawned = true;
                     gameState = gamestate.PLAYING;
                     gameTimer.resume();
                 } else {
-                    // Handle final game over (e.g., show game over screen).
-                    gameTimer.reset();
+                    gameState = gamestate.GAME_OVER;
                 }
             }
             return;
