@@ -7,10 +7,6 @@ import com.badlogic.gdx.audio.Sound;
 
 /**
  * audiomanager is responsible for handling background music and sound effects.
- * It uses AssetManager to preload assets so that playback is immediate.
- * 
- * Note: Although Java convention is to use PascalCase for class names,
- * this class is in lowercase per your request.
  */
 public class audiomanager {
     private AssetManager assetManager;
@@ -19,14 +15,6 @@ public class audiomanager {
     private Sound collectibleSound;
     private Sound fallSound;
 
-    /**
-     * Loads audio assets using AssetManager.
-     *
-     * @param backgroundMusicFilePath  file path for the background music.
-     * @param collisionSoundFilePath   file path for the enemy collision sound effect.
-     * @param collectibleSoundFilePath file path for the collectible pickup sound effect.
-     * @param fallSoundFilePath        file path for the fall-off-platform sound effect.
-     */
     public audiomanager(String backgroundMusicFilePath, String collisionSoundFilePath, String collectibleSoundFilePath, String fallSoundFilePath) {
         assetManager = new AssetManager();
         
@@ -45,17 +33,16 @@ public class audiomanager {
         collectibleSound = assetManager.get(collectibleSoundFilePath, Sound.class);
         fallSound = assetManager.get(fallSoundFilePath, Sound.class);
         
-        // Configure background music.
+        // Set background music to loop and lower volume (softer).
         backgroundMusic.setLooping(true);
-        backgroundMusic.setVolume(0.5f);
+        backgroundMusic.setVolume(0.2f);  // Lower volume (range 0.0f to 1.0f)
         
-        // Prime the sound effects (optional but can reduce first-play latency).
+        // Prime the sound effects (optional)
         collisionSound.play(0f);
         collectibleSound.play(0f);
         fallSound.play(0f);
     }
     
-    // --- Background Music Controls ---
     public void playBackgroundMusic() {
         backgroundMusic.play();
     }
@@ -72,7 +59,6 @@ public class audiomanager {
         backgroundMusic.stop();
     }
     
-    // --- Sound Effect Controls ---
     public void playCollisionSound() {
         collisionSound.play(1.0f);
     }

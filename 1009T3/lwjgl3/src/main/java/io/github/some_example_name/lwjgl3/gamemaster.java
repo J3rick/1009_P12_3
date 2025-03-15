@@ -185,12 +185,12 @@ public class gamemaster extends abstractengine {
     }
 
     private void addPlatform() {
-        // Horizontal gap now between 150 and 300 pixels (was 200 to 400).
-        float x = lastPlatformX + MathUtils.random(150, 300);
-        // Vertical position remains between 100 and 300.
+        // Increase horizontal gap so platforms are further apart.
+        float x = lastPlatformX + MathUtils.random(200, 350);
+        // Vertical position remains the same.
         float y = MathUtils.random(100, 300);
-        // Increase platform width moderately from 150 to 200.
-        platform newPlatform = new platform(platforms.size, x, y, 200, 20);
+        // Use the slightly shorter platform width (180 pixels).
+        platform newPlatform = new platform(platforms.size, x, y, 180, 20);
         platforms.add(newPlatform);
         collisionManager.addCollidable(newPlatform);
         lastPlatformX = x;
