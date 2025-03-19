@@ -9,6 +9,7 @@ enemy.png
 enemy1.png
 enemy2.png
 enemy3.png
+facts_background.png
 fall.mp3
 gameover.png
 libgdx.png
