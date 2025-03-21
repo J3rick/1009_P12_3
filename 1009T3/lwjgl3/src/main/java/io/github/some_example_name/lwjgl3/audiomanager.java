@@ -9,13 +9,17 @@ import com.badlogic.gdx.audio.Sound;
  * audiomanager is responsible for handling background music and sound effects.
  */
 public class audiomanager {
+	//Static Instance - single instance of this class
+	private static audiomanager instance;
+	
+	//Audio resources
     private AssetManager assetManager;
     private Music backgroundMusic;
     private Sound collisionSound;
     private Sound collectibleSound;
     private Sound fallSound;
 
-    public audiomanager(String backgroundMusicFilePath, String collisionSoundFilePath, String collectibleSoundFilePath, String fallSoundFilePath) {
+    private audiomanager(String backgroundMusicFilePath, String collisionSoundFilePath, String collectibleSoundFilePath, String fallSoundFilePath) {
         assetManager = new AssetManager();
         
         // Preload all audio assets.
@@ -37,11 +41,42 @@ public class audiomanager {
         backgroundMusic.setLooping(true);
         backgroundMusic.setVolume(0.2f);  // Lower volume (range 0.0f to 1.0f)
         
-        // Prime the sound effects (optional)
-        collisionSound.play(0f);
-        collectibleSound.play(0f);
-        fallSound.play(0f);
+        prewarmSounds();
     }
+    
+    private void prewarmSounds() {
+    	for (int i = 0; i < 3; i++) {
+    		long collisionId = collisionSound.play(0f, 1f, 0f);
+    		long collectibleId = collectibleSound.play(0f, 1f, 0f);
+    		long fallId = fallSound.play(0f, 1f, 0f);
+    		
+    		collisionSound.stop(collisionId);
+    		collectibleSound.stop(collectibleId);
+    		fallSound.stop(fallId);
+    	}
+    }
+    
+    public static audiomanager getInstance (String backgroundMusicFilePath, String collisionSoundFilePath, String collectibleSoundFilePath, String fallSoundFilePath) {
+    	if (instance == null) {
+    		instance = new audiomanager(backgroundMusicFilePath, collisionSoundFilePath, collectibleSoundFilePath, fallSoundFilePath);
+    	}
+    	return instance;
+    }
+    
+    public static audiomanager getInstance() {
+    	if (instance == null) {
+    		throw new IllegalStateException("AudioManager not initialised. Call getInstance with file paths first.");
+    	}
+    	return instance;
+    }
+    
+    public void rewarmSounds() {
+        // Only re-warm if instance exists
+        if (instance != null) {
+            prewarmSounds();
+        }
+    }
+
     
     public void playBackgroundMusic() {
         backgroundMusic.play();
@@ -77,5 +112,6 @@ public class audiomanager {
         collectibleSound.dispose();
         fallSound.dispose();
         assetManager.dispose();
+        instance = null;
     }
 }

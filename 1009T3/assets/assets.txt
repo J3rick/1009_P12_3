@@ -13,5 +13,9 @@ facts_background.png
 fall.mp3
 gameover.png
 libgdx.png
+menu_background.png
 platform.png
 player.png
+uiskin.atlas
+uiskin.json
+uiskin.png

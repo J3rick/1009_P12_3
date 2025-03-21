@@ -42,6 +42,7 @@ public class gamemaster extends abstractengine {
     private audiomanager audioManager;
     private Texture playerTexture, platformTexture, backgroundTexture, gameOverTexture;
     // Instead of a single enemy texture, we now use an array of enemy texture file names.
+    private EnemyFactory enemyFactory;
     private String[] enemyTextureFiles;
     private String[] collectibleTextureFiles;
 
@@ -137,6 +138,7 @@ public class gamemaster extends abstractengine {
             
             // Define an array of enemy texture file names.
             enemyTextureFiles = new String[] {"enemy1.png", "enemy2.png", "enemy3.png"};
+            enemyFactory = new EnemyFactory(enemyTextureFiles);
             
             // Define an array of collectible texture file names.
             collectibleTextureFiles = new String[] {"collectible1.png", "collectible2.png", "collectible3.png"};
@@ -188,7 +190,8 @@ public class gamemaster extends abstractengine {
             
             // Initialize audio manager with all four audio files.
             // Ensure that "background_music.mp3", "collision.mp3", "collectible.mp3", and "fall.mp3" are in your assets.
-            audioManager = new audiomanager("background_music.mp3", "collision.mp3", "collectible.mp3", "fall.mp3");
+            audioManager = audiomanager.getInstance("background_music.mp3", "collision.mp3", "collectible.mp3", "fall.mp3");
+            audiomanager audioManager = audiomanager.getInstance();
             audioManager.playBackgroundMusic();
         } catch (GdxRuntimeException ex) {
             exceptionHandler.exceptionOccurred(ex);
@@ -219,9 +222,10 @@ public class gamemaster extends abstractengine {
     private void spawnEnemy() {
         if (enemies.size < 2) {
             float x = MathUtils.random(worldCamera.position.x - 400, worldCamera.position.x + 400);
-            int randomIndex = MathUtils.random(0, enemyTextureFiles.length - 1);
-            String chosenEnemyTextureFile = enemyTextureFiles[randomIndex];
-            enemies.add(new enemy(enemies.size, chosenEnemyTextureFile, x, heightThreshold));
+            
+            enemy newEnemy = enemyFactory.createEnemy(EnemyFactory.EnemyType.VERTICAL, enemies.size, x, heightThreshold);
+            enemies.add(newEnemy);
+            collisionManager.addCollidable(newEnemy);
         }
     }
     
@@ -236,12 +240,13 @@ public class gamemaster extends abstractengine {
         }
         if (!hasHorizontalEnemy && horizontalEnemyDespawned) {
             horizontalEnemyDespawned = false;
+            
             float leftEdgeOfScreen = worldCamera.position.x - (worldCamera.viewportWidth / 2);
             float x = leftEdgeOfScreen - 50;
             float y = player.getY() + (player.getHeight() / 4);
-            String chosenEnemyTextureFile = "enemy.png";
-            enemy horizontalEnemy = new enemy(enemies.size, chosenEnemyTextureFile, x, y, enemy.MovementType.HORIZONTAL);
-            horizontalEnemy.setMovingRight(true);
+                        
+            enemy horizontalEnemy = enemyFactory.createEnemy(EnemyFactory.EnemyType.HORIZONTAL, enemies.size, x, y);
+            
             enemies.add(horizontalEnemy);
             collisionManager.addCollidable(horizontalEnemy);
         }
@@ -287,13 +292,13 @@ public class gamemaster extends abstractengine {
         }
         if (!onPlatform && player.getY() < fallThreshold) {
             // Play fall sound before handling life loss.
-            audioManager.playFallSound();
+            audiomanager.getInstance().playFallSound();
             loseLife();
         }
         
         for (enemy e : enemies) {
             if (player.getBounds().overlaps(e.getBounds())) {
-                audioManager.playCollisionSound();
+                audiomanager.getInstance().playCollisionSound();
                 loseLife();
                 break;
             }
@@ -327,7 +332,7 @@ public class gamemaster extends abstractengine {
                     gameState = gamemaster.gamestate.PAUSED;
                 }
 
-                audioManager.playCollectibleSound();
+                audiomanager.getInstance().playCollectibleSound();
                 score += 10;
                 collisionManager.removeCollidable(e);
                 collectible.removeIndex(i);
