@@ -493,13 +493,14 @@ public class gamemaster extends abstractengine {
         } else if (gameState == gamestate.GAME_OVER) {
         	// probably split transitionmanager and lifecyclemanager
         	if (sceneTransitionManager.getCurrentScene().getName() != "game over") {
-        		// todo: adjust camera position
-        		batch.begin();
         		sceneTransitionManager.loadScene("game over");
-        		sceneTransitionManager.render(batch, worldCamera.position.x - VIRTUAL_WIDTH / 2,
-                        worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT); // draw the background game over img
-        		batch.end();
         	}
+        	// draw the background game over img
+        	batch.begin();
+    		sceneTransitionManager.render(batch, worldCamera.position.x - VIRTUAL_WIDTH / 2,
+                    worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+    		batch.end();
+                    
         } else {
             // Assumes that this is main scene
         	batch.begin();
