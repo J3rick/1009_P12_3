@@ -56,6 +56,7 @@ public class gamemaster extends abstractengine {
     private boolean horizontalEnemyDespawned = true;
     
     private scenetransitionmanager sceneTransitionManager;
+    private scenelifecyclemanager lifecycleManager;
 
     private float velocityY = 0;
     private final float gravity = -700;
@@ -75,7 +76,7 @@ public class gamemaster extends abstractengine {
     private final float VIRTUAL_HEIGHT = 480;
 
     // Player lives and game over timer
-    private int lives = 5;
+    private int lives = 1;	// Original is 5, set to 1 for testing purposes
     private float gameOverTimer = 0;
     private final float gameOverDuration = 3;
     
@@ -93,7 +94,6 @@ public class gamemaster extends abstractengine {
         try {
         	// Inside your game initialization class
             factsBg = new Texture("facts_background.png");  // Load background texture
-            
             
             exceptionHandler = new exceptionhandler(new gdxlogger(), new simpleshutdownstrategy());
             batch = new SpriteBatch();
@@ -148,19 +148,22 @@ public class gamemaster extends abstractengine {
             // Create scenes and add necessary entities.
             platformerScene = new platformerscene("main", backgroundTexture, Color.BLUE, worldCamera);
             platformerScene.addEntityToList(player);
-            gameOverScene = new gameoverscene("game over", gameOverTexture, Color.BLACK, worldCamera);
-
-            sceneTransitionManager = new scenetransitionmanager(new inmemoryscenerepository());
+            gameOverScene = new gameoverscene("game over", gameOverTexture, Color.GREEN, worldCamera);
             factScene = new factsScene("facts", factsBg, worldCamera, sceneTransitionManager);
+            
+            sceneTransitionManager = new scenetransitionmanager(new inmemoryscenerepository());
             sceneTransitionManager.addScene(platformerScene);
             sceneTransitionManager.addScene(gameOverScene);
             sceneTransitionManager.addScene(factScene);
             sceneTransitionManager.loadScene("main");
             
-            scenelifecyclemanager lifecycleManager = new scenelifecyclemanager(new inmemoryscenerepository());
+            // why do both the transitionmanager and the lifecycle manager load the same ecene? consider sharing inmemoryscenerepository()
+            /*
+            lifecycleManager = new scenelifecyclemanager(new inmemoryscenerepository());
             lifecycleManager.loadScene("main");
             lifecycleManager.update();
             lifecycleManager.render(batch);
+            */
             
             spawnEnemy();
             for (int i = 0; i < enemies.size; i++) {
@@ -197,7 +200,6 @@ public class gamemaster extends abstractengine {
         collisionManager.addCollidable(newPlatform);
         lastPlatformX = x;
     }
-
 
     // Spawn a vertical enemy.
     private void spawnEnemy() {
@@ -323,12 +325,6 @@ public class gamemaster extends abstractengine {
         }
     }
 
-
-
-
-
-
-    
     public void setGameState(gamestate newState) {
     	System.out.println("Game state changing from " + this.gameState + " to " + newState);
         this.gameState = newState;
@@ -341,7 +337,6 @@ public class gamemaster extends abstractengine {
             
         }
     }
-
 
     @Override
     protected void update() {
@@ -488,7 +483,6 @@ public class gamemaster extends abstractengine {
         batch.setProjectionMatrix(worldCamera.combined);
 
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-        Gdx.gl.glClearColor(0, 0, 0, 1);
 
         // If the game is paused (i.e. fact scene is active), let the fact scene render itself.
         if (gameState == gamestate.PAUSED) {
@@ -496,8 +490,19 @@ public class gamemaster extends abstractengine {
                 batch.end();
             }
             sceneTransitionManager.render(batch);
+        } else if (gameState == gamestate.GAME_OVER) {
+        	// probably split transitionmanager and lifecyclemanager
+        	if (sceneTransitionManager.getCurrentScene().getName() != "game over") {
+        		// todo: adjust camera position
+        		batch.begin();
+        		sceneTransitionManager.loadScene("game over");
+        		sceneTransitionManager.render(batch, worldCamera.position.x - VIRTUAL_WIDTH / 2,
+                        worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT); // draw the background game over img
+        		batch.end();
+        	}
         } else {
-            batch.begin();
+            // Assumes that this is main scene
+        	batch.begin();
             batch.draw(backgroundTexture, worldCamera.position.x - VIRTUAL_WIDTH / 2,
                        worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
             batch.draw(playerTexture, player.getX(), player.getY(), player.getWidth(), player.getHeight());
@@ -510,16 +515,9 @@ public class gamemaster extends abstractengine {
             for (platform platform : platforms) {
                 batch.draw(platformTexture, platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight());
             }
-            if (gameState == gamestate.GAME_OVER) {
-                float gameOverWidth = gameOverTexture.getWidth();
-                float gameOverHeight = gameOverTexture.getHeight();
-                float centerX = worldCamera.position.x - gameOverWidth / 2;
-                float centerY = worldCamera.position.y - gameOverHeight / 2;
-                batch.draw(gameOverTexture, centerX, centerY);
-            }
+            
             batch.end();
-        }
-
+        } 
 
         // Render UI elements using the fixed UI camera
         batch.setProjectionMatrix(uiCamera.combined);

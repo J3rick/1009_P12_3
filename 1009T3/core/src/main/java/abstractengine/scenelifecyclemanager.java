@@ -31,9 +31,9 @@ public class scenelifecyclemanager {
         }
     }
 
-    public void render(SpriteBatch batch) {
+    public void render(SpriteBatch batch, float x, float y, float width, float height) {
         if (currentScene != null) {
-            currentScene.render(batch);
+            currentScene.render(batch, x, y, width, height);
         }
     }
 

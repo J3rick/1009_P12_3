@@ -93,6 +93,11 @@ public class factsScene extends scene {
     }
 
     @Override
+    public void render(SpriteBatch batch, float x, float y, float width, float height) {
+    }
+
+    
+    @Override
     public void dispose() {
         font.dispose(); // Dispose font to prevent memory leaks
     }

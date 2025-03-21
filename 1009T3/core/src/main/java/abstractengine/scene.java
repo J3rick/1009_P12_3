@@ -146,6 +146,7 @@ public abstract class scene {
     // Abstract Methods
     public abstract void init();
     public abstract void update();
+    public abstract void render(SpriteBatch batch, float x, float y, float width, float height);
     public abstract void render(SpriteBatch batch);
     public abstract void dispose();
 }
