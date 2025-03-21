@@ -1,7 +1,6 @@
 package io.github.some_example_name.lwjgl3;
 
 import abstractengine.entity;
-import abstractengine.scenemanager;
 import abstractengine.interfaces.imovable;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;

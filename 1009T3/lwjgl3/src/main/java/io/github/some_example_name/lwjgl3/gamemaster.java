@@ -4,7 +4,6 @@ import abstractengine.abstractengine;
 import abstractengine.movementmanager;
 import abstractengine.entitymanager;
 import abstractengine.exceptionhandler;
-import abstractengine.scenemanager;
 import abstractengine.iomanager;
 import abstractengine.collisionmanager;
 import abstractengine.logging.gdxlogger;
@@ -32,7 +31,6 @@ public class gamemaster extends abstractengine {
     private SpriteBatch batch;
     private movementmanager movementManager;
     private entitymanager entityManager;
-    private scenemanager sceneManager;
     private iomanager inputManager;
     private OrthographicCamera worldCamera;
     private FitViewport viewport;
@@ -101,19 +99,6 @@ public class gamemaster extends abstractengine {
             batch = new SpriteBatch();
             movementManager = new movementmanager(new fallingmovementstrategy(150));
             entityManager = new entitymanager();
-            sceneManager = new scenemanager(new inmemoryscenerepository());
-            sceneManager.addScene(platformerScene);
-            sceneManager.addScene(gameOverScene);
-            sceneManager.addScene(factScene);
-            sceneManager.loadScene("main");
-
-            sceneManager.update();
-            sceneManager.render(batch);
-            
-            
-            
-            
-
             inputManager = new iomanager();
           
             // Initialize world camera and viewport
@@ -165,10 +150,6 @@ public class gamemaster extends abstractengine {
             platformerScene.addEntityToList(player);
             gameOverScene = new gameoverscene("game over", gameOverTexture, Color.BLACK, worldCamera);
 
-            sceneManager.addScene(platformerScene);
-            sceneManager.addScene(gameOverScene);
-            sceneManager.addScene(factScene);
-            
             sceneTransitionManager = new scenetransitionmanager(new inmemoryscenerepository());
             factScene = new factsScene("facts", factsBg, worldCamera, sceneTransitionManager);
             sceneTransitionManager.addScene(platformerScene);
