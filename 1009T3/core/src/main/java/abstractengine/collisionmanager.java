@@ -35,7 +35,7 @@ public class collisionmanager {
     }
 
     private void handleCollision(icollidable obj1, icollidable obj2) {
-        System.out.println("Collision detected between: " + obj1 + " and " + obj2);
+        // System.out.println("Collision detected between: " + obj1 + " and " + obj2);
         // Additional collision response logic can be added here.
     }
 }
