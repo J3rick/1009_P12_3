@@ -27,7 +27,7 @@ public class gameoverscene extends scene{
 
     @Override
     public void init() {
-    	System.out.println("init");
+
     }
 
     @Override

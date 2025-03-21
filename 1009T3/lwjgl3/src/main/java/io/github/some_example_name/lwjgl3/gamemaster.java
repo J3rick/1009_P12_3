@@ -517,19 +517,14 @@ public class gamemaster extends abstractengine {
                 batch.draw(platformTexture, platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight());
             }
             
+         // Render UI elements using the fixed UI camera
+            batch.setProjectionMatrix(uiCamera.combined);
+            font.draw(batch, "Lives: " + lives, 10, VIRTUAL_HEIGHT - 10);
+            font.draw(batch, "Score: " + score, 10, VIRTUAL_HEIGHT - 30);
+            font.draw(batch, "Time: " + gameTimer.getElapsedTime() / 1000, 10, VIRTUAL_HEIGHT - 50);
             batch.end();
         } 
-
-        // Render UI elements using the fixed UI camera
-        batch.setProjectionMatrix(uiCamera.combined);
-        batch.begin();
-        font.draw(batch, "Lives: " + lives, 10, VIRTUAL_HEIGHT - 10);
-        font.draw(batch, "Score: " + score, 10, VIRTUAL_HEIGHT - 30);
-        font.draw(batch, "Time: " + gameTimer.getElapsedTime() / 1000, 10, VIRTUAL_HEIGHT - 50);
-        batch.end();
     }
-
-
 
     @Override
     public void resize(int width, int height) {
