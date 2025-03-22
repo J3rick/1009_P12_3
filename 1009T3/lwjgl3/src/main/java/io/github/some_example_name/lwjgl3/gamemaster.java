@@ -149,16 +149,17 @@ public class gamemaster extends abstractengine {
             player.setPosition(firstPlatform.getX() + firstPlatform.getWidth() / 2 - 25,
                                  firstPlatform.getY() + firstPlatform.getHeight());
 
+            memoryscenerepository = new inmemoryscenerepository();
+            
+            sceneTransitionManager = new scenetransitionmanager(memoryscenerepository);
+
             // Create scenes and add necessary entities.
-            mainMenuScene = new mainmenuscene("main menu",mainmenuBackgroundTexture, Color.GREEN, worldCamera);
+            mainMenuScene = new mainmenuscene("main menu",mainmenuBackgroundTexture, Color.GREEN, worldCamera, sceneTransitionManager);
             platformerScene = new platformerscene("main", backgroundTexture, Color.BLUE, worldCamera);
             platformerScene.addEntityToList(player);
             gameOverScene = new gameoverscene("game over", gameOverTexture, Color.GREEN, worldCamera);
             factScene = new factsScene("facts", factsBg, worldCamera, sceneTransitionManager);
             
-            memoryscenerepository = new inmemoryscenerepository();
-            
-            sceneTransitionManager = new scenetransitionmanager(memoryscenerepository);
             sceneTransitionManager.addScene(mainMenuScene);
             sceneTransitionManager.addScene(platformerScene);
             sceneTransitionManager.addScene(gameOverScene);
@@ -517,11 +518,9 @@ public class gamemaster extends abstractengine {
                 sceneLifecycleManager.render(batch);
         	}
         	// draw the background game over img
-        	batch.begin();
+        	// batch is drawn inside the scene to allow for UI elements to be drawn
         	sceneLifecycleManager.render(batch, worldCamera.position.x - VIRTUAL_WIDTH / 2,
-                    worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
-    		batch.end();
-        
+                    worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);       
         }
         else {
             // Assumes that this is main scene
