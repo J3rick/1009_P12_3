@@ -76,7 +76,7 @@ public class gamemaster extends abstractengine {
     private final float VIRTUAL_HEIGHT = 480;
 
     // Player lives and game over timer
-    private int lives = 1;	// Original is 5, set to 1 for testing purposes
+    private int lives = 5;
     private float gameOverTimer = 0;
     private final float gameOverDuration = 3;
     
@@ -311,7 +311,6 @@ public class gamemaster extends abstractengine {
                     factsScene newFactScene = new factsScene(uniqueName, factsBg, worldCamera, sceneTransitionManager);
                     sceneTransitionManager.addScene(newFactScene);
                     sceneTransitionManager.loadScene(uniqueName);
-
                     gameState = gamemaster.gamestate.PAUSED;
                 }
 

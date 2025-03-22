@@ -36,6 +36,12 @@ public class scenetransitionmanager {
         }
     }
 
+    public void render(SpriteBatch batch) {
+    	if (currentscene != null) {
+            currentscene.render(batch); // by default, draws bgimg
+        }
+	}
+    
     public void render(SpriteBatch batch, float x, float y, float width, float height) {
         if (currentscene != null) {
             currentscene.render(batch, x, y, width, height); // by default, draws bgimg
@@ -52,8 +58,5 @@ public class scenetransitionmanager {
         return currentscene;
     }
 
-	public void render(SpriteBatch batch) {
-		// TODO Auto-generated method stub
-		
-	}
+	
 }
