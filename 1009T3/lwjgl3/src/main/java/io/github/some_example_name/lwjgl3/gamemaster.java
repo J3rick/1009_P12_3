@@ -123,7 +123,7 @@ public class gamemaster extends abstractengine {
             platformTexture = new Texture("platform.png");
             backgroundTexture = new Texture("background.png");
             gameOverTexture = new Texture("gameover.png");
-            mainmenuBackgroundTexture = new Texture("menu_background.png");
+            mainmenuBackgroundTexture = new Texture("mainmenu_background.png");
             
             // Define an array of enemy texture file names.
             enemyTextureFiles = new String[] {"enemy1.png", "enemy2.png", "enemy3.png"};
@@ -523,7 +523,7 @@ public class gamemaster extends abstractengine {
     		batch.end();
         
         }
-        else{
+        else {
             // Assumes that this is main scene
         	batch.begin();
             batch.draw(backgroundTexture, worldCamera.position.x - VIRTUAL_WIDTH / 2,
