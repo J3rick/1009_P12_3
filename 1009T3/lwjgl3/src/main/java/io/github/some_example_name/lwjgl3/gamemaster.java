@@ -56,7 +56,9 @@ public class gamemaster extends abstractengine {
     private boolean horizontalEnemyDespawned = true;
     
     private scenetransitionmanager sceneTransitionManager;
-    private scenelifecyclemanager lifecycleManager;
+    private scenelifecyclemanager sceneLifecycleManager;
+    
+    private inmemoryscenerepository memoryscenerepository;
 
     private float velocityY = 0;
     private final float gravity = -700;
@@ -151,19 +153,17 @@ public class gamemaster extends abstractengine {
             gameOverScene = new gameoverscene("game over", gameOverTexture, Color.GREEN, worldCamera);
             factScene = new factsScene("facts", factsBg, worldCamera, sceneTransitionManager);
             
-            sceneTransitionManager = new scenetransitionmanager(new inmemoryscenerepository());
+            memoryscenerepository = new inmemoryscenerepository();
+            
+            sceneTransitionManager = new scenetransitionmanager(memoryscenerepository);
             sceneTransitionManager.addScene(platformerScene);
             sceneTransitionManager.addScene(gameOverScene);
             sceneTransitionManager.addScene(factScene);
             sceneTransitionManager.loadScene("main");
             
-            // why do both the transitionmanager and the lifecycle manager load the same ecene? consider sharing inmemoryscenerepository()
-            /*
-            lifecycleManager = new scenelifecyclemanager(new inmemoryscenerepository());
-            lifecycleManager.loadScene("main");
-            lifecycleManager.update();
-            lifecycleManager.render(batch);
-            */
+            sceneLifecycleManager = new scenelifecyclemanager();
+            sceneLifecycleManager.setCurrentScene(sceneTransitionManager.getCurrentScene());
+            sceneLifecycleManager.update();
             
             spawnEnemy();
             for (int i = 0; i < enemies.size; i++) {
@@ -235,7 +235,6 @@ public class gamemaster extends abstractengine {
         }
     }
     
-    // Spawn collectibles.
     private void spawnCollectibles() {
         if (collectible.size < 2) {
             float x = MathUtils.random(worldCamera.position.x - 400, worldCamera.position.x + 400);
@@ -311,6 +310,8 @@ public class gamemaster extends abstractengine {
                     factsScene newFactScene = new factsScene(uniqueName, factsBg, worldCamera, sceneTransitionManager);
                     sceneTransitionManager.addScene(newFactScene);
                     sceneTransitionManager.loadScene(uniqueName);
+                    sceneLifecycleManager.setCurrentScene(sceneTransitionManager.getCurrentScene());
+                    sceneLifecycleManager.render(batch);
                     gameState = gamemaster.gamestate.PAUSED;
                 }
 
@@ -365,11 +366,11 @@ public class gamemaster extends abstractengine {
 
         if (gameState == gamestate.PLAYING) {
             gameTimer.update();
-            sceneTransitionManager.update();
+            sceneLifecycleManager.update();
         }
         if (gameState == gamestate.PAUSED) {
             if (sceneTransitionManager.getCurrentScene() != null) {
-                sceneTransitionManager.update();
+            	sceneLifecycleManager.update();
             } else {
                 System.out.println("WARNING: No active scene to update");
             }
@@ -488,15 +489,16 @@ public class gamemaster extends abstractengine {
             if (batch.isDrawing()) {
                 batch.end();
             }
-            sceneTransitionManager.render(batch);
+            sceneLifecycleManager.render(batch);
         } else if (gameState == gamestate.GAME_OVER) {
-        	// probably split transitionmanager and lifecyclemanager
         	if (sceneTransitionManager.getCurrentScene().getName() != "game over") {
         		sceneTransitionManager.loadScene("game over");
+        		sceneLifecycleManager.setCurrentScene(sceneTransitionManager.getCurrentScene());
+                sceneLifecycleManager.render(batch);
         	}
         	// draw the background game over img
         	batch.begin();
-    		sceneTransitionManager.render(batch, worldCamera.position.x - VIRTUAL_WIDTH / 2,
+        	sceneLifecycleManager.render(batch, worldCamera.position.x - VIRTUAL_WIDTH / 2,
                     worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
     		batch.end();
                     
