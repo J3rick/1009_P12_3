@@ -19,6 +19,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -38,7 +40,7 @@ public class gamemaster extends abstractengine {
     private collisionmanager collisionManager;
     private exceptionhandler exceptionHandler;
     private audiomanager audioManager;
-    private Texture playerTexture, platformTexture, backgroundTexture, gameOverTexture, mainmenuBackgroundTexture, factsBg;
+    private Texture playerTexture, platformTexture, backgroundTexture, gameOverTexture, mainmenuBackgroundTexture, factsBg, tutorialBackgroundTexture;
     // Instead of a single enemy texture, we now use an array of enemy texture file names.
     private EnemyFactory enemyFactory;
     private String[] enemyTextureFiles;
@@ -48,19 +50,24 @@ public class gamemaster extends abstractengine {
     private Array<enemy> enemies;
     private Array<collectibles> collectible;
     private Array<platform> platforms;
+    
+    // Add scenes here
     private platformerscene platformerScene;
     private gameoverscene gameOverScene;
     private factsScene factScene;
     private mainmenuscene mainMenuScene;
+    private tutorialscene tutorialScene;
     
     private boolean lifeLostRecently = false;
     private boolean horizontalEnemyDespawned = true;
     
     private scenetransitionmanager sceneTransitionManager;
     private scenelifecyclemanager sceneLifecycleManager;
-    
     private inmemoryscenerepository memoryscenerepository;
 
+    private Skin gamemasterSkin;
+    
+    // Change Configuration values here
     private float velocityY = 0;
     private final float gravity = -700;
     private final float jumpPower = 400;
@@ -124,6 +131,7 @@ public class gamemaster extends abstractengine {
             backgroundTexture = new Texture("background.png");
             gameOverTexture = new Texture("gameover.png");
             mainmenuBackgroundTexture = new Texture("mainmenu_background.png");
+            tutorialBackgroundTexture = new Texture("tutorial_background.png");
             
             // Define an array of enemy texture file names.
             enemyTextureFiles = new String[] {"enemy1.png", "enemy2.png", "enemy3.png"};
@@ -150,17 +158,21 @@ public class gamemaster extends abstractengine {
                                  firstPlatform.getY() + firstPlatform.getHeight());
 
             memoryscenerepository = new inmemoryscenerepository();
-            
             sceneTransitionManager = new scenetransitionmanager(memoryscenerepository);
 
+            // Generate Skin, Tables for UI elements in menus
+            gamemasterSkin = new Skin(Gdx.files.internal("metalui/metal-ui.json"));
+
             // Create scenes and add necessary entities.
-            mainMenuScene = new mainmenuscene("main menu",mainmenuBackgroundTexture, Color.GREEN, worldCamera, sceneTransitionManager);
+            mainMenuScene = new mainmenuscene("main menu", mainmenuBackgroundTexture, Color.GREEN, worldCamera, sceneTransitionManager, gamemasterSkin);
+            tutorialScene = new tutorialscene("tutorial", tutorialBackgroundTexture, Color.GREEN, worldCamera, sceneTransitionManager, gamemasterSkin);
             platformerScene = new platformerscene("main", backgroundTexture, Color.BLUE, worldCamera);
             platformerScene.addEntityToList(player);
             gameOverScene = new gameoverscene("game over", gameOverTexture, Color.GREEN, worldCamera);
             factScene = new factsScene("facts", factsBg, worldCamera, sceneTransitionManager);
             
             sceneTransitionManager.addScene(mainMenuScene);
+            sceneTransitionManager.addScene(tutorialScene);
             sceneTransitionManager.addScene(platformerScene);
             sceneTransitionManager.addScene(gameOverScene);
             sceneTransitionManager.addScene(factScene);
