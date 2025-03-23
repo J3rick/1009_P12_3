@@ -65,7 +65,7 @@ public class gamemaster extends abstractengine {
     private scenelifecyclemanager sceneLifecycleManager;
     private inmemoryscenerepository memoryscenerepository;
 
-    private Skin gamemasterSkin;
+    private String gamemasterSkinPath;
     
     // Change Configuration values here
     private float velocityY = 0;
@@ -93,7 +93,7 @@ public class gamemaster extends abstractengine {
     // Score tracking
     private int score = 0;
     
-    public enum gamestate { PLAYING, GAME_OVER, RESPAWNING, PAUSED, MAIN_MENU }
+    public enum gamestate { PLAYING, GAME_OVER, RESPAWNING, PAUSED, MAIN_MENU, TUTORIAL }
     private gamestate gameState = gamestate.MAIN_MENU;
     
     // BitmapFont to display lives and score
@@ -161,11 +161,11 @@ public class gamemaster extends abstractengine {
             sceneTransitionManager = new scenetransitionmanager(memoryscenerepository);
 
             // Generate Skin, Tables for UI elements in menus
-            gamemasterSkin = new Skin(Gdx.files.internal("metalui/metal-ui.json"));
+            gamemasterSkinPath = "metalui/metal-ui.json";
 
             // Create scenes and add necessary entities.
-            mainMenuScene = new mainmenuscene("main menu", mainmenuBackgroundTexture, Color.GREEN, worldCamera, sceneTransitionManager, gamemasterSkin);
-            tutorialScene = new tutorialscene("tutorial", tutorialBackgroundTexture, Color.GREEN, worldCamera, sceneTransitionManager, gamemasterSkin);
+            mainMenuScene = new mainmenuscene("main menu", mainmenuBackgroundTexture, Color.GREEN, worldCamera, sceneTransitionManager, gamemasterSkinPath);
+            tutorialScene = new tutorialscene("tutorial", tutorialBackgroundTexture, Color.GREEN, worldCamera, sceneTransitionManager, gamemasterSkinPath);
             platformerScene = new platformerscene("main", backgroundTexture, Color.BLUE, worldCamera);
             platformerScene.addEntityToList(player);
             gameOverScene = new gameoverscene("game over", gameOverTexture, Color.GREEN, worldCamera);
@@ -524,15 +524,13 @@ public class gamemaster extends abstractengine {
     		batch.end();
                     
         } else if (gameState == gamestate.MAIN_MENU){
-        	if (sceneTransitionManager.getCurrentScene().getName() != "main menu") {
+        	if (sceneTransitionManager.getCurrentScene().getName() != "main menu"  && sceneTransitionManager.getCurrentScene().getName() != "tutorial"  ) {
         		sceneTransitionManager.loadScene("main menu");
-        		sceneLifecycleManager.setCurrentScene(sceneTransitionManager.getCurrentScene());
-                sceneLifecycleManager.render(batch);
         	}
-        	// draw the background game over img
-        	// batch is drawn inside the scene to allow for UI elements to be drawn
+        	sceneLifecycleManager.setCurrentScene(sceneTransitionManager.getCurrentScene());
+        	// batch begins and ends inside the scene to allow for UI elements to be drawn
         	sceneLifecycleManager.render(batch, worldCamera.position.x - VIRTUAL_WIDTH / 2,
-                    worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);       
+                    worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
         }
         else {
             // Assumes that this is main scene
