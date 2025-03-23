@@ -4,25 +4,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class scenelifecyclemanager {
     private scene currentScene;
-    private scenerepository sceneRepo;
 
-    public scenelifecyclemanager(scenerepository repo) {
-        this.sceneRepo = repo;
+    public scenelifecyclemanager() {
         this.currentScene = null;
-    }
-
-    public void loadScene(String name) {
-        scene next = sceneRepo.getScene(name);
-        if (next != null) {
-            if (currentScene != null) {
-                currentScene.dispose();
-            }
-            currentScene = next;
-            currentScene.init();
-            System.out.println("Switched to scene: " + name);
-        } else {
-            System.out.println("Scene not found: " + name);
-        }
     }
 
     public void update() {
@@ -36,6 +20,12 @@ public class scenelifecyclemanager {
             currentScene.render(batch);
         }
     }
+    
+    public void render(SpriteBatch batch, float x, float y, float width, float height) {
+        if (currentScene != null) {
+            currentScene.render(batch, x, y, width, height);
+        }
+    }
 
     public void dispose() {
         if (currentScene != null) {
@@ -45,5 +35,9 @@ public class scenelifecyclemanager {
 
     public scene getCurrentScene() {
         return currentScene;
+    }
+    
+    public void setCurrentScene(scene scene_in) {
+    	currentScene = scene_in;
     }
 }

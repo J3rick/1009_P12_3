@@ -42,6 +42,11 @@ public class platformerscene extends scene {
     }
 
     @Override
+    public void render(SpriteBatch batch, float x, float y, float width, float height) {
+        batch.draw(super.getBgImg(), 0, 0);
+    }
+    
+    @Override
     public void dispose() {
         super.getBgImg().dispose();
     }

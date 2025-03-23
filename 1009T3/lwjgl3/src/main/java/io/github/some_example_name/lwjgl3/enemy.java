@@ -18,6 +18,9 @@ public class enemy extends entity implements imovable {
     
     private MovementType movementType;
     private boolean movingRight = true; 
+    private float horizontalSpeed = HORIZONTAL_SPEED;
+    private float verticalSpeed = FALL_SPEED;
+    
     
     public enemy(int id, String textureFile, float x, float y, MovementType movementType) {
         super(id, "enemy", x, y, 50, 50); // Use parent constructor
@@ -39,15 +42,15 @@ public class enemy extends entity implements imovable {
     public void updateMovement(float deltaTime) {
     	switch (movementType) {
     	case VERTICAL:
-    		setY(getY() - FALL_SPEED * deltaTime);
+    		setY(getY() - verticalSpeed * deltaTime);
     		break;
     	
     	case HORIZONTAL:
     		if (movingRight) {
-    			setX(getX() + HORIZONTAL_SPEED * deltaTime);
+    			setX(getX() + horizontalSpeed * deltaTime);
     		}
     		else {
-    			setX(getX() - HORIZONTAL_SPEED * deltaTime);
+    			setX(getX() - horizontalSpeed * deltaTime);
     		}
     		break;
     	}
@@ -61,6 +64,26 @@ public class enemy extends entity implements imovable {
     // Method to get the movement type
     public MovementType getMovementType() {
         return movementType;
+    }
+    
+    // Method to set horizontal movement speed
+    public void setHorizontalSpeed(float speed) {
+        this.horizontalSpeed = speed;
+    }
+    
+    // Method to get horizontal movement speed
+    public float getHorizontalSpeed() {
+        return horizontalSpeed;
+    }
+    
+    // Method to set vertical movement speed
+    public void setVerticalSpeed(float speed) {
+        this.verticalSpeed = speed;
+    }
+    
+    // Method to get vertical movement speed
+    public float getVerticalSpeed() {
+        return verticalSpeed;
     }
 
     @Override

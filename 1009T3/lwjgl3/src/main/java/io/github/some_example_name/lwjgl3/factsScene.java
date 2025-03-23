@@ -14,7 +14,8 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.Input;
 
 public class factsScene extends scene {
-    private String fact;
+    private String uniqueFactSceneName;
+	private String fact;
     private BitmapFont font;
     private Texture bgTexture;
     private scenetransitionmanager sceneTransitionManager;
@@ -34,6 +35,7 @@ public class factsScene extends scene {
 
     public factsScene(String name, Texture bgTexture, OrthographicCamera camera, scenetransitionmanager sceneTransitionManager) {
         super(name, Color.WHITE, bgTexture, camera);
+        uniqueFactSceneName = name;
         this.sceneTransitionManager = sceneTransitionManager;
         this.bgTexture = bgTexture;
         this.font = new BitmapFont();
@@ -49,7 +51,7 @@ public class factsScene extends scene {
 
     @Override
     public void init() {
-        System.out.println("Fact Scene Initialized with Fact: " + fact);
+        System.out.println(uniqueFactSceneName + " Initialized with Fact: " + fact);
     }
 
     @Override
@@ -64,11 +66,11 @@ public class factsScene extends scene {
     @Override
     public void render(SpriteBatch batch) {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+        
         if (!batch.isDrawing()) {
             batch.begin();
         }
-
+        
         OrthographicCamera cam = (OrthographicCamera) getCamera();
         float camWidth = cam.viewportWidth;
         float camHeight = cam.viewportHeight;
@@ -92,6 +94,12 @@ public class factsScene extends scene {
         batch.end();
     }
 
+    
+    @Override
+    public void render(SpriteBatch batch, float x, float y, float width, float height) {
+    	return;
+    }
+    
     @Override
     public void dispose() {
         font.dispose(); // Dispose font to prevent memory leaks

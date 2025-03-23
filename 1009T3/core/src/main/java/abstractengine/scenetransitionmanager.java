@@ -1,7 +1,5 @@
 package abstractengine;
 
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
 public class scenetransitionmanager {
     private scene currentscene;
     private scenerepository sceneRepo;
@@ -30,25 +28,8 @@ public class scenetransitionmanager {
         }
     }
 
-    public void update() {
-        if (currentscene != null) {
-            currentscene.update();
-        }
-    }
-
-    public void render(SpriteBatch batch) {
-        if (currentscene != null) {
-            currentscene.render(batch);
-        }
-    }
-
-    public void dispose() {
-        if (currentscene != null) {
-            currentscene.dispose();
-        }
-    }
-
     public scene getCurrentScene() {
         return currentscene;
     }
+	
 }

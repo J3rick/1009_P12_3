@@ -36,9 +36,14 @@ public class gameoverscene extends scene{
     }
 
     @Override
-    public void render(SpriteBatch batch) {
-        batch.draw(super.getBgImg(), 0, 0);
+    public void render(SpriteBatch batch, float x, float y, float width, float height) {
+        batch.draw(super.getBgImg(), x, y, width, height);
     }
+    
+    @Override
+    public void render(SpriteBatch batch) {
+    }
+    
 
     @Override
     public void dispose() {

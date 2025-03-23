@@ -4,7 +4,6 @@ import abstractengine.abstractengine;
 import abstractengine.movementmanager;
 import abstractengine.entitymanager;
 import abstractengine.exceptionhandler;
-import abstractengine.scenemanager;
 import abstractengine.iomanager;
 import abstractengine.collisionmanager;
 import abstractengine.logging.gdxlogger;
@@ -20,6 +19,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -32,7 +33,6 @@ public class gamemaster extends abstractengine {
     private SpriteBatch batch;
     private movementmanager movementManager;
     private entitymanager entityManager;
-    private scenemanager sceneManager;
     private iomanager inputManager;
     private OrthographicCamera worldCamera;
     private FitViewport viewport;
@@ -40,8 +40,9 @@ public class gamemaster extends abstractengine {
     private collisionmanager collisionManager;
     private exceptionhandler exceptionHandler;
     private audiomanager audioManager;
-    private Texture playerTexture, platformTexture, backgroundTexture, gameOverTexture;
+    private Texture playerTexture, platformTexture, backgroundTexture, gameOverTexture, mainmenuBackgroundTexture, factsBg, tutorialBackgroundTexture;
     // Instead of a single enemy texture, we now use an array of enemy texture file names.
+    private EnemyFactory enemyFactory;
     private String[] enemyTextureFiles;
     private String[] collectibleTextureFiles;
 
@@ -49,15 +50,24 @@ public class gamemaster extends abstractengine {
     private Array<enemy> enemies;
     private Array<collectibles> collectible;
     private Array<platform> platforms;
+    
+    // Add scenes here
     private platformerscene platformerScene;
     private gameoverscene gameOverScene;
     private factsScene factScene;
-    private Texture factsBg;
+    private mainmenuscene mainMenuScene;
+    private tutorialscene tutorialScene;
+    
     private boolean lifeLostRecently = false;
     private boolean horizontalEnemyDespawned = true;
     
     private scenetransitionmanager sceneTransitionManager;
+    private scenelifecyclemanager sceneLifecycleManager;
+    private inmemoryscenerepository memoryscenerepository;
 
+    private String gamemasterSkinPath;
+    
+    // Change Configuration values here
     private float velocityY = 0;
     private final float gravity = -700;
     private final float jumpPower = 400;
@@ -83,8 +93,8 @@ public class gamemaster extends abstractengine {
     // Score tracking
     private int score = 0;
     
-    public enum gamestate { PLAYING, GAME_OVER, RESPAWNING, PAUSED }
-    private gamestate gameState = gamestate.PLAYING;
+    public enum gamestate { PLAYING, GAME_OVER, RESPAWNING, PAUSED, MAIN_MENU, TUTORIAL }
+    private gamestate gameState = gamestate.MAIN_MENU;
     
     // BitmapFont to display lives and score
     private BitmapFont font;
@@ -95,24 +105,10 @@ public class gamemaster extends abstractengine {
         	// Inside your game initialization class
             factsBg = new Texture("facts_background.png");  // Load background texture
             
-            
             exceptionHandler = new exceptionhandler(new gdxlogger(), new simpleshutdownstrategy());
             batch = new SpriteBatch();
             movementManager = new movementmanager(new fallingmovementstrategy(150));
             entityManager = new entitymanager();
-            sceneManager = new scenemanager(new inmemoryscenerepository());
-            sceneManager.addScene(platformerScene);
-            sceneManager.addScene(gameOverScene);
-            sceneManager.addScene(factScene);
-            sceneManager.loadScene("main");
-
-            sceneManager.update();
-            sceneManager.render(batch);
-            
-            
-            
-            
-
             inputManager = new iomanager();
           
             // Initialize world camera and viewport
@@ -134,9 +130,12 @@ public class gamemaster extends abstractengine {
             platformTexture = new Texture("platform.png");
             backgroundTexture = new Texture("background.png");
             gameOverTexture = new Texture("gameover.png");
+            mainmenuBackgroundTexture = new Texture("mainmenu_background.png");
+            tutorialBackgroundTexture = new Texture("tutorial_background.png");
             
             // Define an array of enemy texture file names.
             enemyTextureFiles = new String[] {"enemy1.png", "enemy2.png", "enemy3.png"};
+            enemyFactory = new EnemyFactory(enemyTextureFiles);
             
             // Define an array of collectible texture file names.
             collectibleTextureFiles = new String[] {"collectible1.png", "collectible2.png", "collectible3.png"};
@@ -158,26 +157,30 @@ public class gamemaster extends abstractengine {
             player.setPosition(firstPlatform.getX() + firstPlatform.getWidth() / 2 - 25,
                                  firstPlatform.getY() + firstPlatform.getHeight());
 
+            memoryscenerepository = new inmemoryscenerepository();
+            sceneTransitionManager = new scenetransitionmanager(memoryscenerepository);
+
+            // Generate Skin, Tables for UI elements in menus
+            gamemasterSkinPath = "metalui/metal-ui.json";
+
             // Create scenes and add necessary entities.
+            mainMenuScene = new mainmenuscene("main menu", mainmenuBackgroundTexture, Color.GREEN, worldCamera, sceneTransitionManager, gamemasterSkinPath);
+            tutorialScene = new tutorialscene("tutorial", tutorialBackgroundTexture, Color.GREEN, worldCamera, sceneTransitionManager, gamemasterSkinPath);
             platformerScene = new platformerscene("main", backgroundTexture, Color.BLUE, worldCamera);
             platformerScene.addEntityToList(player);
-            gameOverScene = new gameoverscene("game over", gameOverTexture, Color.BLACK, worldCamera);
-
-            sceneManager.addScene(platformerScene);
-            sceneManager.addScene(gameOverScene);
-            sceneManager.addScene(factScene);
-            
-            sceneTransitionManager = new scenetransitionmanager(new inmemoryscenerepository());
+            gameOverScene = new gameoverscene("game over", gameOverTexture, Color.GREEN, worldCamera);
             factScene = new factsScene("facts", factsBg, worldCamera, sceneTransitionManager);
+            
+            sceneTransitionManager.addScene(mainMenuScene);
+            sceneTransitionManager.addScene(tutorialScene);
             sceneTransitionManager.addScene(platformerScene);
             sceneTransitionManager.addScene(gameOverScene);
             sceneTransitionManager.addScene(factScene);
-            sceneTransitionManager.loadScene("main");
+            sceneTransitionManager.loadScene("main menu"); // load first scene
             
-            scenelifecyclemanager lifecycleManager = new scenelifecyclemanager(new inmemoryscenerepository());
-            lifecycleManager.loadScene("main");
-            lifecycleManager.update();
-            lifecycleManager.render(batch);
+            sceneLifecycleManager = new scenelifecyclemanager();
+            sceneLifecycleManager.setCurrentScene(sceneTransitionManager.getCurrentScene());
+            sceneLifecycleManager.update();
             
             spawnEnemy();
             for (int i = 0; i < enemies.size; i++) {
@@ -188,7 +191,8 @@ public class gamemaster extends abstractengine {
             
             // Initialize audio manager with all four audio files.
             // Ensure that "background_music.mp3", "collision.mp3", "collectible.mp3", and "fall.mp3" are in your assets.
-            audioManager = new audiomanager("background_music.mp3", "collision.mp3", "collectible.mp3", "fall.mp3");
+            audioManager = audiomanager.getInstance("background_music.mp3", "collision.mp3", "collectible.mp3", "fall.mp3");
+            audiomanager audioManager = audiomanager.getInstance();
             audioManager.playBackgroundMusic();
         } catch (GdxRuntimeException ex) {
             exceptionHandler.exceptionOccurred(ex);
@@ -214,14 +218,14 @@ public class gamemaster extends abstractengine {
         lastPlatformX = x;
     }
 
-
     // Spawn a vertical enemy.
     private void spawnEnemy() {
         if (enemies.size < 2) {
             float x = MathUtils.random(worldCamera.position.x - 400, worldCamera.position.x + 400);
-            int randomIndex = MathUtils.random(0, enemyTextureFiles.length - 1);
-            String chosenEnemyTextureFile = enemyTextureFiles[randomIndex];
-            enemies.add(new enemy(enemies.size, chosenEnemyTextureFile, x, heightThreshold));
+            
+            enemy newEnemy = enemyFactory.createEnemy(EnemyFactory.EnemyType.VERTICAL, enemies.size, x, heightThreshold);
+            enemies.add(newEnemy);
+            collisionManager.addCollidable(newEnemy);
         }
     }
     
@@ -236,18 +240,18 @@ public class gamemaster extends abstractengine {
         }
         if (!hasHorizontalEnemy && horizontalEnemyDespawned) {
             horizontalEnemyDespawned = false;
+            
             float leftEdgeOfScreen = worldCamera.position.x - (worldCamera.viewportWidth / 2);
             float x = leftEdgeOfScreen - 50;
             float y = player.getY() + (player.getHeight() / 4);
-            String chosenEnemyTextureFile = "enemy.png";
-            enemy horizontalEnemy = new enemy(enemies.size, chosenEnemyTextureFile, x, y, enemy.MovementType.HORIZONTAL);
-            horizontalEnemy.setMovingRight(true);
+                        
+            enemy horizontalEnemy = enemyFactory.createEnemy(EnemyFactory.EnemyType.HORIZONTAL, enemies.size, x, y);
+            
             enemies.add(horizontalEnemy);
             collisionManager.addCollidable(horizontalEnemy);
         }
     }
     
-    // Spawn collectibles.
     private void spawnCollectibles() {
         if (collectible.size < 2) {
             float x = MathUtils.random(worldCamera.position.x - 400, worldCamera.position.x + 400);
@@ -287,13 +291,13 @@ public class gamemaster extends abstractengine {
         }
         if (!onPlatform && player.getY() < fallThreshold) {
             // Play fall sound before handling life loss.
-            audioManager.playFallSound();
+            audiomanager.getInstance().playFallSound();
             loseLife();
         }
         
         for (enemy e : enemies) {
             if (player.getBounds().overlaps(e.getBounds())) {
-                audioManager.playCollisionSound();
+                audiomanager.getInstance().playCollisionSound();
                 loseLife();
                 break;
             }
@@ -323,11 +327,12 @@ public class gamemaster extends abstractengine {
                     factsScene newFactScene = new factsScene(uniqueName, factsBg, worldCamera, sceneTransitionManager);
                     sceneTransitionManager.addScene(newFactScene);
                     sceneTransitionManager.loadScene(uniqueName);
-
+                    sceneLifecycleManager.setCurrentScene(sceneTransitionManager.getCurrentScene());
+                    sceneLifecycleManager.render(batch);
                     gameState = gamemaster.gamestate.PAUSED;
                 }
 
-                audioManager.playCollectibleSound();
+                audiomanager.getInstance().playCollectibleSound();
                 score += 10;
                 collisionManager.removeCollidable(e);
                 collectible.removeIndex(i);
@@ -337,12 +342,6 @@ public class gamemaster extends abstractengine {
         }
     }
 
-
-
-
-
-
-    
     public void setGameState(gamestate newState) {
     	System.out.println("Game state changing from " + this.gameState + " to " + newState);
         this.gameState = newState;
@@ -355,7 +354,6 @@ public class gamemaster extends abstractengine {
             
         }
     }
-
 
     @Override
     protected void update() {
@@ -385,15 +383,19 @@ public class gamemaster extends abstractengine {
 
         if (gameState == gamestate.PLAYING) {
             gameTimer.update();
-            sceneTransitionManager.update();
+            sceneLifecycleManager.update();
         }
         if (gameState == gamestate.PAUSED) {
             if (sceneTransitionManager.getCurrentScene() != null) {
-                sceneTransitionManager.update();
+            	sceneLifecycleManager.update();
             } else {
                 System.out.println("WARNING: No active scene to update");
             }
             return;  // Stop updating game logic while paused
+        }
+        
+        if (gameState == gamestate.MAIN_MENU) {
+        	return;  // Stop updating game logic while paused
         }
 
         updateEnemies();
@@ -502,16 +504,37 @@ public class gamemaster extends abstractengine {
         batch.setProjectionMatrix(worldCamera.combined);
 
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-        Gdx.gl.glClearColor(0, 0, 0, 1);
 
         // If the game is paused (i.e. fact scene is active), let the fact scene render itself.
         if (gameState == gamestate.PAUSED) {
             if (batch.isDrawing()) {
                 batch.end();
             }
-            sceneTransitionManager.render(batch);
-        } else {
-            batch.begin();
+            sceneLifecycleManager.render(batch);
+        } else if (gameState == gamestate.GAME_OVER) {
+        	if (sceneTransitionManager.getCurrentScene().getName() != "game over") {
+        		sceneTransitionManager.loadScene("game over");
+        		sceneLifecycleManager.setCurrentScene(sceneTransitionManager.getCurrentScene());
+                sceneLifecycleManager.render(batch);
+        	}
+        	// draw the background game over img
+        	batch.begin();
+        	sceneLifecycleManager.render(batch, worldCamera.position.x - VIRTUAL_WIDTH / 2,
+                    worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+    		batch.end();
+                    
+        } else if (gameState == gamestate.MAIN_MENU){
+        	if (sceneTransitionManager.getCurrentScene().getName() != "main menu"  && sceneTransitionManager.getCurrentScene().getName() != "tutorial"  ) {
+        		sceneTransitionManager.loadScene("main menu");
+        	}
+        	sceneLifecycleManager.setCurrentScene(sceneTransitionManager.getCurrentScene());
+        	// batch begins and ends inside the scene to allow for UI elements to be drawn
+        	sceneLifecycleManager.render(batch, worldCamera.position.x - VIRTUAL_WIDTH / 2,
+                    worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        }
+        else {
+            // Assumes that this is main scene
+        	batch.begin();
             batch.draw(backgroundTexture, worldCamera.position.x - VIRTUAL_WIDTH / 2,
                        worldCamera.position.y - VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
             batch.draw(playerTexture, player.getX(), player.getY(), player.getWidth(), player.getHeight());
@@ -524,27 +547,15 @@ public class gamemaster extends abstractengine {
             for (platform platform : platforms) {
                 batch.draw(platformTexture, platform.getX(), platform.getY(), platform.getWidth(), platform.getHeight());
             }
-            if (gameState == gamestate.GAME_OVER) {
-                float gameOverWidth = gameOverTexture.getWidth();
-                float gameOverHeight = gameOverTexture.getHeight();
-                float centerX = worldCamera.position.x - gameOverWidth / 2;
-                float centerY = worldCamera.position.y - gameOverHeight / 2;
-                batch.draw(gameOverTexture, centerX, centerY);
-            }
+            
+         // Render UI elements using the fixed UI camera
+            batch.setProjectionMatrix(uiCamera.combined);
+            font.draw(batch, "Lives: " + lives, 10, VIRTUAL_HEIGHT - 10);
+            font.draw(batch, "Score: " + score, 10, VIRTUAL_HEIGHT - 30);
+            font.draw(batch, "Time: " + gameTimer.getElapsedTime() / 1000, 10, VIRTUAL_HEIGHT - 50);
             batch.end();
-        }
-
-
-        // Render UI elements using the fixed UI camera
-        batch.setProjectionMatrix(uiCamera.combined);
-        batch.begin();
-        font.draw(batch, "Lives: " + lives, 10, VIRTUAL_HEIGHT - 10);
-        font.draw(batch, "Score: " + score, 10, VIRTUAL_HEIGHT - 30);
-        font.draw(batch, "Time: " + gameTimer.getElapsedTime() / 1000, 10, VIRTUAL_HEIGHT - 50);
-        batch.end();
+        } 
     }
-
-
 
     @Override
     public void resize(int width, int height) {

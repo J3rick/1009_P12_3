@@ -13,5 +13,12 @@ facts_background.png
 fall.mp3
 gameover.png
 libgdx.png
+mainmenu_background.png
+menu_background.png
+metalui/font-export.fnt
+metalui/metal-ui.atlas
+metalui/metal-ui.json
+metalui/metal-ui.png
 platform.png
 player.png
+tutorial_background.png
